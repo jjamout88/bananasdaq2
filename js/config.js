@@ -1,18 +1,18 @@
 // 바나나스닥2 — all tunable numbers live here.
 window.CFG={
- CANDLE_MS:2000, VOL_X:1.05, N_NORMAL:40, N_BOSS:60, MINBET:50,
+ CANDLE_MS:2000, VOL_X:1.05, N_NORMAL:30, N_BOSS:45, MINBET:50,
  FEE_FLAT:2, FEE_PCT:0.0005, PV_DIV:3,
  START_BAL:[10000,20000,40000,70000,100000],
- TARGET:[[20,20,30],[40,40,60],[70,70,110],[110,110,170],[140,140,220]],
+ TARGET:[[12,12,18],[24,24,36],[42,42,66],[66,66,102],[84,84,132]],
  VOL_MIN_RATIO:0.7, BOSS_TOP:0.10,
  WAGE_PCT:0.30, WAGE_CAP0:1500,
  NEGO:{base:500,maxOver:2,moods:[[.25,1.5],[.50,1],[.20,.5],[.05,'bonus']]},
  INTEREST:{pct:.10,round:10,cap:500,capPiggy:1000,piggyStage:200},
  LEV:[[1,0],[2,300],[5,4000],[10,20000]],
  BET:[[10,0],[30,500],[50,2000]],
- SHELF:2, SHELF_BONUS_X:2, TIER_ODDS:[.70,.25,.05], TIER_PRICE:[1000,1750,2750], PRICE_JITTER:.10,
+ SHELF:2, SHELF_BONUS_X:2, TIER_ODDS:[.70,.25,.05], TIER_PRICE:[700,1225,1925], PRICE_JITTER:.10,
  REROLL:300, REROLL_STEP:150, SLOTS:3, SLOT4_PRICE:15000, SELL_PCT:.3, DISC:.30,
- GIMMICK:{count:5,minGap:5,warn:2,dur:{witch:3,cpi:1,fomc:1,earn:3,limit:3},hidePct:.4},
+ GIMMICK:{count:4,minGap:5,warn:2,dur:{witch:3,cpi:1,fomc:1,earn:3,limit:3},hidePct:.4},
  COMBO_STEP:.15, HOLD_BARS:4, TREND_X:2, COUNTER_X:2, HOLD_X:2, LONG_X:1.2, SHORT_X:1.2, FIRST_X:2, ALLIN_X:1.3, SCALP_X:1.5, SCALP_BARS:3, BAIT_N:3, BAIT_LOSS:.5, COMPOUND_STEP:.004,
  // 강화 (확률·수치는 시뮬 후 확정): lv1..3 비용/성공률, boost=레벨당 보너스 부분 강화율
  UPG:{max:3,cost:[1500,3000,6000],p:[.7,.5,.3],boost:.25,

@@ -114,9 +114,10 @@
 .ftxt small{display:block;font-size:12px;color:#ffcd2e}
 #mut{z-index:2!important;font-size:14px!important;line-height:19px;max-width:300px}
 /* position button state */
-#acts #close{background:#5a5a66;filter:grayscale(.6) brightness(.8)}
+#acts #close{white-space:nowrap;overflow:hidden;background:#5a5a66;filter:grayscale(.6) brightness(.8)}
 #acts.haspos #close{background:#38b764;filter:none;box-shadow:0 0 0 3px #a7f070}
 #acts.haspos #long,#acts.haspos #short{background:#5a5a66!important;filter:grayscale(1) brightness(.7);pointer-events:none}
+#acts.haspos #close.loss{background:#b8574a;box-shadow:0 0 0 3px #e8a08a}
 .g-fomc #acts.haspos #close{filter:grayscale(1) brightness(.6)}
 /* settings (pixel) */
 .sTtl{letter-spacing:2px;text-shadow:3px 3px 0 #000}

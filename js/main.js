@@ -60,12 +60,12 @@ function mapScr(){R.phase='map';save();G.on=false;state='idle';
   for(let k=0;k<3;k++){const s=c*3+k,si=ENG.stageInfo(s);if(k)h+='<div class="link"></div>';h+='<div class="node'+(si.boss?' boss':'')+(s<R.stage?' done':s===R.stage?' now':'')+'">'+(s<R.stage?'✔':si.boss?'☠':'')+' '+si.name+'<small>+'+si.target+'%</small></div>'}h+='</div>'}
  h+='</div><div class="sub" style="margin-top:10px">레버 ×'+Math.max(...R.levU)+' · 베팅 '+Math.max(...R.betU)+'%</div>'+invHTML()+'<div class="btns" style="margin-top:auto;margin-bottom:24px"><button class="b k" id="mpM">메뉴</button><button class="b y big" style="min-width:200px" id="mpGo">출근하기 ▶</button></div>';
  show(h);fillInv(ov);$('mpGo').onclick=brief;$('mpM').onclick=menu}
-function brief(){const si=ENG.stageInfo(R.stage);let msg='시작 잔고 '+money(si.start)+'\n목표 '+money(si.start*(1+si.target/100))+' (+'+si.target+'%)\n'+(si.boss?60:40)+'봉 × 3초';
+function brief(){const si=ENG.stageInfo(R.stage);let msg='시작 잔고 '+money(si.start)+'\n목표 '+money(si.start*(1+si.target/100))+' (+'+si.target+'%)\n'+(si.boss?CFG.N_BOSS:CFG.N_NORMAL)+'봉 × 3초';
  let h='<h2>'+(si.boss?'☠ BOSS '+si.name+' · '+ENG.BOSS_INFO[si.bk][0]:'STAGE '+si.name)+'</h2><p>'+msg+'</p>';
  if(si.boss)h+='<p style="color:#ffcd2e">'+ENG.BOSS_INFO[si.bk][1]+'\n(60봉 중 5번, 1봉 전에 경고)</p><p class="sub">※ 이 시나리오는 가상이며 실제 사건과 무관합니다.</p>';
  modal(h+'<div class="btns"><button class="b k" id="bB">뒤로</button><button class="b y" id="bGo">장 시작!</button></div>');$('bB').onclick=closeModal;$('bGo').onclick=()=>{closeModal();if(R.phase!=='map')return;ENG.startStage(R);save();enterTrade(false)}}
 // ---------- tutorial ----------
-const TUT=[['① 매매','LONG = 오를 때 돈 벌기\nSHORT = 내릴 때 돈 벌기\nCLOSE = 포지션 정리\n반대 버튼 = 정리 후 반대로 진입'],['② 목표','장 마감까지 잔고가 목표 금액을 넘어야 해.\n못 넘으면 런 끝!\n손실이 베팅금만큼 커지면 강제청산.'],['③ 일급 & 상점','클리어하면 수익의 30%가 일급(상한 있음).\n일급으로 레버리지·베팅·바나나를 사.\n보스를 잡으면 연봉협상으로 상한 UP.']];
+const TUT=[['① 매매','LONG = 오를 때 돈 벌기\nSHORT = 내릴 때 돈 벌기\n익절/손절 = 포지션 정리 (지금 손익 기준으로 글자가 바뀌어)\n반대 버튼 = 정리 후 반대로 진입'],['② 목표','장 마감까지 잔고가 목표 금액을 넘어야 해.\n못 넘으면 런 끝!\n손실이 베팅금만큼 커지면 강제청산.'],['③ 일급 & 상점','클리어하면 수익의 30%가 일급(상한 있음).\n일급으로 레버리지·베팅·바나나를 사.\n보스를 잡으면 연봉협상으로 상한 UP.']];
 function tutorial(i,done){if(i>=TUT.length){META.tut=true;saveMeta();closeModal();done();return}
  modal('<h2>'+TUT[i][0]+'</h2><p>'+TUT[i][1]+'</p><p class="sub">'+(i+1)+'/'+TUT.length+'</p><div class="btns"><button class="b k" id="tS">건너뛰기</button><button class="b y" id="tN">'+(i<TUT.length-1?'다음':'시작!')+'</button></div>');
  $('tN').onclick=()=>tutorial(i+1,done);$('tS').onclick=()=>tutorial(99,done)}
@@ -114,7 +114,7 @@ function onClose(r){if(!r)return;const s=(r.p>=0?'+':'')+fmt(r.p-r.fee);
   if(T.combo>=2){const c=$('combo');if(c){c.textContent=T.combo+' COMBO 🔥';c.style.display='block';clearTimeout(c._t);c._t=setTimeout(()=>c.style.display='none',1500)}}
   if(r.why==='close'&&!gimOn())say(pick(['챙겼다!','익절!','개꿀!','푸근하다','익절은 항상 옳다','개같이 부활!']),55,'Y',true);else shake=Math.max(shake,8)}
  else{setMood('sad',100);shake=Math.max(shake,12);snd(200,.2,'sawtooth',.05,-80);burst(97,200,10,['G','d'],1,30);floatTxt(s,false);
-  if(r.why==='close'&&!gimOn())say(pick(['아이고..','손절..','눈물의 CLOSE','손절은 과학이다','아 ㅋㅋ 시드 증발']),55,'S',false)}
+  if(r.why==='close'&&!gimOn())say(pick(['아이고..','손절..','눈물의 손절','손절은 과학이다','아 ㅋㅋ 시드 증발']),55,'S',false)}
  const bb=$('baitB');if(bb)bb.textContent=T.baitN+'/'+(CFG.BAIT_N+ENG.lv(R,'bait'));
  if(r.why!=='liq'){mutTimer=-2000;setTimeout(()=>{if(G.on)mutter()},1100)}
  if(T.reached&&!T._said){T._said=1;say('목표 달성!',50,'Y',true);bell()}save()}
@@ -152,7 +152,9 @@ function hud(){const p=upnl(),cpi=false;const set=(id,v,prop='textContent')=>{if
  const pr=Math.max(0,Math.min(1,(T.bal+p-T.start)/(tgt-T.start)));const gw=(pr*100|0)+'%';if(lastHud.gw!==gw){lastHud.gw=gw;$('goal').firstChild.style.width=gw}
  const n=$('nana');if(n){const ok=ENG.canNana(R,G.price);const ns=ok+'|'+T.nanaLeft;if(ns!==nanaState){nanaState=ns;n.disabled=!ok;n.textContent=T.nanaLeft>0?'나나바'+(T.nanaLeft>1?' ×'+T.nanaLeft:''):'사용함'}}}
 let last=0;
-let _bs='';function btnState(){const k=(T&&T.pos&&G.on)?'p':'n';if(k===_bs)return;_bs=k;const a=$('acts');if(a)a.classList.toggle('haspos',k==='p')}
+let _bs='',_cl='';function closeLabel(){if(!(T&&T.pos&&G.on))return '익절';if(ENG.gimAt(T,T.i)==='limit')return '정리';return upnl()>=0?'익절':'손절'}
+function btnState(){const k=(T&&T.pos&&G.on)?'p':'n';const a=$('acts');if(k!==_bs){_bs=k;if(a)a.classList.toggle('haspos',k==='p')}
+ const l=closeLabel();if(l!==_cl){_cl=l;const b=$('close');if(b){b.textContent=l;b.classList.toggle('loss',l==='손절')}}}
 function loop(ts){const dt=Math.min(100,ts-(last||ts));last=ts;if(G.on||state==='bell'){step(dt);if(T){drawChart();drawFx();if(G.on)hud()}btnState()}const w=$('wrap');if(shake>0){w.style.transform='translate('+((Math.random()-.5)*shake).toFixed(1)+'px,'+((Math.random()-.5)*shake).toFixed(1)+'px)';shake*=.9;if(shake<.5)shake=0}else if(w.style.transform)w.style.transform='';requestAnimationFrame(loop)}
 requestAnimationFrame(loop);
 // ---------- settlement ----------
