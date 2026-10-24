@@ -145,11 +145,11 @@ function step(dt){if(!G.on||paused)return;G.t+=dt*SPEED;mutTimer+=dt;if(mutTimer
 function finishStage(){G.on=false;clearMails();applyGim();state='bell';bell();const res=T.res;say(res.bust?'깡통!':'장 마감',50,res.bust?'L':'Y',false);
  if(R.phase==='over'||R.phase==='clear')recordRun();save();setTimeout(()=>{state='idle';gimClear();R.phase==='settle'?settleScr():overScr()},1600)}
 function gimClear(){if(gimCls)$('game').classList.remove(gimCls);gimCls=''}
-function hud(){const p=upnl(),cpi=false;const set=(id,v,prop='textContent')=>{if(lastHud[id]!==v){lastHud[id]=v;$(id)[prop]=v}};
+function hud(){const p=upnl(),cpi=!!(T&&ENG.gimAt(T,T.i)==='limit');const set=(id,v,prop='textContent')=>{if(lastHud[id]!==v){lastHud[id]=v;$(id)[prop]=v}};
  set('bal',cpi?'$???':fmt(T.bal+p));set('price',cpi?'???':G.price.toFixed(2));set('timer',(T.i+1)+'/'+T.n+'봉');
- const tgt=T.start*(1+T.target/100);const below=T.reached&&T.bal+p<tgt;set('goalT',(below?'⚠ 목표 아래! ':'목표 ')+money(tgt)+' (+'+T.target+'%)');set('goalT',below?'warn':'','className');
+ const tgt=T.start*(1+T.target/100);const below=!cpi&&T.reached&&T.bal+p<tgt;set('goalT',(below?'⚠ 목표 아래! ':'목표 ')+money(tgt)+' (+'+T.target+'%)');set('goalT',below?'warn':'','className');
  if(T.pos){set('pnl',cpi?'??? '+(T.pos.dir>0?'LONG':'SHORT'):(p>=0?'+':'')+fmt(p)+' '+(T.pos.dir>0?'LONG':'SHORT')+' ×'+T.pos.lev+' $'+T.pos.bet.toLocaleString());set('pnl',cpi?'':p>=0?'g':'r','className')}else{set('pnl','포지션 없음'+(T.combo?' · '+T.combo+'연승':''));set('pnl','','className')}
- const pr=Math.max(0,Math.min(1,(T.bal+p-T.start)/(tgt-T.start)));const gw=(pr*100|0)+'%';if(lastHud.gw!==gw){lastHud.gw=gw;$('goal').firstChild.style.width=gw}
+ const pr=Math.max(0,Math.min(1,(T.bal+p-T.start)/(tgt-T.start)));const gw=(pr*100|0)+'%';if(!cpi&&lastHud.gw!==gw){lastHud.gw=gw;$('goal').firstChild.style.width=gw}
  const n=$('nana');if(n){const ok=ENG.canNana(R,G.price);const ns=ok+'|'+T.nanaLeft;if(ns!==nanaState){nanaState=ns;n.disabled=!ok;n.textContent=T.nanaLeft>0?'나나바'+(T.nanaLeft>1?' ×'+T.nanaLeft:''):'사용함'}}}
 let last=0;
 let _bs='',_cl='';function closeLabel(){if(!(T&&T.pos&&G.on))return '익절';if(ENG.gimAt(T,T.i)==='limit')return '정리';return upnl()>=0?'익절':'손절'}
