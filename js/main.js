@@ -65,7 +65,7 @@ function brief(){const si=ENG.stageInfo(R.stage);let msg='시작 잔고 '+money(
  if(si.boss)h+='<p style="color:#ffcd2e">'+ENG.BOSS_INFO[si.bk][1]+'\n(60봉 중 5번, 1봉 전에 경고)</p><p class="sub">※ 이 시나리오는 가상이며 실제 사건과 무관합니다.</p>';
  modal(h+'<div class="btns"><button class="b k" id="bB">뒤로</button><button class="b y" id="bGo">장 시작!</button></div>');$('bB').onclick=closeModal;$('bGo').onclick=()=>{closeModal();if(R.phase!=='map')return;ENG.startStage(R);save();enterTrade(false)}}
 // ---------- tutorial ----------
-const TUT=[['① 매매','LONG = 오를 때 돈 벌기\nSHORT = 내릴 때 돈 벌기\n익절/손절 = 포지션 정리 (지금 손익 기준으로 글자가 바뀌어)\n반대 버튼 = 정리 후 반대로 진입'],['② 목표','장 마감까지 잔고가 목표 금액을 넘어야 해.\n못 넘으면 런 끝!\n손실이 베팅금만큼 커지면 강제청산.'],['③ 일급 & 상점','클리어하면 수익의 30%가 일급(상한 있음).\n일급으로 레버리지·베팅·바나나를 사.\n보스를 잡으면 연봉협상으로 상한 UP.']];
+const TUT=[['① 매매','LONG = 오를 때 돈 벌기\nSHORT = 내릴 때 돈 벌기\n익절/손절 = 포지션 정리 (지금 손익 기준으로 글자가 바뀌어)\n포지션 잡으면 버튼이 익절(빨강)/손절(파랑) 하나로 바뀌어'],['② 목표','장 마감까지 잔고가 목표 금액을 넘어야 해.\n못 넘으면 런 끝!\n손실이 베팅금만큼 커지면 강제청산.'],['③ 일급 & 상점','클리어하면 수익의 30%가 일급(상한 있음).\n일급으로 레버리지·베팅·바나나를 사.\n보스를 잡으면 연봉협상으로 상한 UP.']];
 function tutorial(i,done){if(i>=TUT.length){META.tut=true;saveMeta();closeModal();done();return}
  modal('<h2>'+TUT[i][0]+'</h2><p>'+TUT[i][1]+'</p><p class="sub">'+(i+1)+'/'+TUT.length+'</p><div class="btns"><button class="b k" id="tS">건너뛰기</button><button class="b y" id="tN">'+(i<TUT.length-1?'다음':'시작!')+'</button></div>');
  $('tN').onclick=()=>tutorial(i+1,done);$('tS').onclick=()=>tutorial(99,done)}
@@ -125,7 +125,7 @@ function act(dir){if(!G.on||paused||!T)return;if(dir&&T.pos)return;if(ENG.locked
  if(!gimOn()){if(dir>0)say(pick(['지금이니!','지금이니!','가즈아!!','가즈아!!','롱롱롱!','떡상 가즈아!']),55,'L');else say(pick(['간다간다 숏간다!','숏숏숏!','숏숏숏!','지금이니!']),55,'S')}else shake=Math.max(shake,8);setMood('happy',40);save()}
 function doNana(){if(!G.on||paused)return;const r=ENG.nana(R,G.price);if(r){onClose(r);}else snd(120,.08)}
 function checkBust(){if(T&&ENG.bust(R)&&R.phase==='trade'){ENG.endStage(R,true);finishStage()}}
-$('long').onclick=()=>act(1);$('short').onclick=()=>act(-1);$('close').onclick=()=>act(0);
+$('leave').textContent='🏃 일찍 퇴근하기 · 보너스 +'+money(CFG.DOUBLE_BONUS);$('leave').onclick=()=>{if(!G.on||paused||!T||R.phase!=='trade'||ENG.gimAt(T,T.i)==='limit')return;const r0=T.pos;const res=ENG.earlyLeave(R,G.price);if(!res)return;if(res.last)onClose(res.last);$('leave').classList.remove('on');lastHud.lv=false;finishStage()};$('long').onclick=()=>act(1);$('short').onclick=()=>act(-1);$('close').onclick=()=>act(0);
 $('pause').onclick=()=>{if(G.on&&!paused){paused=true;save();pauseMenu(false)}};
 function pauseMenu(res){BGM.setHold(true);modal('<h2>'+(res?'이어하기':'일시정지')+'</h2><p>'+ENG.stageInfo(R.stage).name+' · '+(T.i+1)+'/'+T.n+'봉\n잔고 '+money(T.bal)+'</p><div class="btns"><button class="b k" id="pM">메뉴로</button><button class="b k" id="pS">⚙ 설정</button><button class="b y" id="pG">계속 ▶</button></div>');
  $('pG').onclick=()=>{closeModal();BGM.setHold(false);startGo()};$('pS').onclick=()=>settings(()=>pauseMenu(res));$('pM').onclick=()=>{closeModal();BGM.setHold(false);save();G.on=false;menu()}}
@@ -143,7 +143,7 @@ function step(dt){if(!G.on||paused)return;G.t+=dt*SPEED;mutTimer+=dt;if(mutTimer
   else if(ev.gim)setNews('⚠ '+ENG.BOSS_INFO[ev.gim][0]+'!',true,true);else clearSticky();
   applyGim();checkBust();save()}
 }
-function finishStage(){G.on=false;mcOff();clearMails();applyGim();state='bell';bell();const res=T.res;say(res.bust?'깡통!':'장 마감',50,res.bust?'L':'Y',false);
+function finishStage(){G.on=false;mcOff();clearMails();applyGim();state='bell';bell();const res=T.res;say(res.bust?'깡통!':res.early?'칼퇴!':'장 마감',50,res.bust?'L':'Y',false);
  if(R.phase==='over'||R.phase==='clear')recordRun();save();setTimeout(()=>{state='idle';gimClear();R.phase==='settle'?settleScr():overScr()},1600)}
 // margin call (ported from original): loss >= MC_ON of bet -> amber frame + monkey 喝!! slam, recover below MC_OFF. Visual only, no money effect.
 const MC_ON=.75,MC_OFF=.6,MC_IN_LIMIT=true;
@@ -157,12 +157,12 @@ function hud(){const p=upnl(),cpi=!!(T&&ENG.gimAt(T,T.i)==='limit');const set=(i
  set('bal',cpi?'$???':fmt(T.bal+p));set('price',cpi?'???':G.price.toFixed(2));set('timer',(T.i+1)+'/'+T.n+'봉');
  const tgt=T.start*(1+T.target/100);const below=!cpi&&T.reached&&T.bal+p<tgt;set('goalT',(below?'⚠ 목표 아래! ':'목표 ')+money(tgt)+' (+'+T.target+'%)');set('goalT',below?'warn':'','className');
  if(T.pos){set('pnl',cpi?'??? '+(T.pos.dir>0?'LONG':'SHORT'):(p>=0?'+':'')+fmt(p)+' '+(T.pos.dir>0?'LONG':'SHORT')+' ×'+T.pos.lev+' $'+T.pos.bet.toLocaleString());set('pnl',cpi?'':p>=0?'g':'r','className')}else{set('pnl','포지션 없음'+(T.combo?' · '+T.combo+'연승':''));set('pnl','','className')}
- const pr=Math.max(0,Math.min(1,(T.bal+p-T.start)/(tgt-T.start)));const gw=(pr*100|0)+'%';if(!cpi&&lastHud.gw!==gw){lastHud.gw=gw;$('goal').firstChild.style.width=gw}
+ {const lv=G.on&&R.phase==='trade'&&ENG.gimAt(T,T.i)!=='limit'&&ENG.canLeave(R,G.price);if(lastHud.lv!==lv){lastHud.lv=lv;$('leave').classList.toggle('on',lv)}}const eq=T.bal+p,span=tgt-T.start,ph=eq>=tgt?(eq>=tgt+span?2:1):0;const pr=ph===0?Math.max(0,Math.min(1,(eq-T.start)/span)):ph===1?(eq-tgt)/span:1;const gw=ph+':'+(pr*100|0)+'%';if(!cpi&&lastHud.gw!==gw){lastHud.gw=gw;const g=$('goal');g.firstChild.style.width=(pr*100|0)+'%';g.classList.toggle('or',ph>0);g.classList.toggle('done',ph===2);$('goalX').textContent=ph===2?'보너스 달성 +'+money(CFG.DOUBLE_BONUS):ph===1?'보너스 2배 수익률 도전':''}
  const n=$('nana');if(n){const ok=ENG.canNana(R,G.price);const ns=ok+'|'+T.nanaLeft;if(ns!==nanaState){nanaState=ns;n.disabled=!ok;n.textContent=T.nanaLeft>0?'나나바'+(T.nanaLeft>1?' ×'+T.nanaLeft:''):'사용함'}}}
 let last=0;
 let _bs='',_cl='';function closeLabel(){if(!(T&&T.pos&&G.on))return '익절';if(ENG.gimAt(T,T.i)==='limit')return '정리';return upnl()>=0?'익절':'손절'}
 function btnState(){const k=(T&&T.pos&&G.on)?'p':'n';const a=$('acts');if(k!==_bs){_bs=k;if(a)a.classList.toggle('haspos',k==='p')}
- const l=closeLabel();if(l!==_cl){_cl=l;const b=$('close');if(b){b.textContent=l;b.classList.toggle('loss',l==='손절')}}}
+ const l=closeLabel();if(l!==_cl){_cl=l;const b=$('close');if(b){b.textContent=l;b.classList.toggle('loss',l==='손절');b.classList.toggle('neu',l==='정리')}}}
 function loop(ts){const dt=Math.min(100,ts-(last||ts));last=ts;if(G.on||state==='bell'){step(dt);if(T){drawChart();drawFx();if(G.on)hud()}btnState()}const w=$('wrap');if(shake>0){w.style.transform='translate('+((Math.random()-.5)*shake).toFixed(1)+'px,'+((Math.random()-.5)*shake).toFixed(1)+'px)';shake*=.9;if(shake<.5)shake=0}else if(w.style.transform)w.style.transform='';requestAnimationFrame(loop)}
 requestAnimationFrame(loop);
 // ---------- settlement ----------
@@ -170,7 +170,7 @@ function settleScr(){const s=R.settle,res=R.T.res;const firstTime=!s.applied;ENG
  let h='<div class="ttl" style="margin-top:40px">'+si.name+' 클리어!</div><div class="box" style="text-align:left"><div class="ln"><span>수익률</span><b>+'+res.ret.toFixed(1)+'% / 목표 '+R.T.target+'%</b></div>'+
  '<div class="ln"><span>수익 × 30%</span><b>'+money(s.raw)+'</b></div><div class="ln'+(s.capped?' r':'')+'"><span>일급'+(s.capped?' (상한 컷)':'')+'</span><b>'+money(s.pay)+'</b></div>'+
  (s.piggy?'<div class="ln"><span>저금통</span><b>+'+money(s.piggy)+'</b></div>':'')+'<div class="ln"><span>이자 (보유 '+money(s.carry)+'의 10%)</span><b>+'+money(s.interest)+'</b></div>'+
- (s.capped?'<p class="sub">상한에 막혔어… 보스 잡고 연봉협상 가자</p>':'')+(s.shelfBonus?'<p style="color:#ffcd2e;font-size:12px">목표 2배 달성! 다음 상점 진열 +1</p>':'')+
+ (s.capped?'<p class="sub">상한에 막혔어… 보스 잡고 연봉협상 가자</p>':'')+(s.dbl?'<div class="ln"><span>목표 2배 보너스</span><b>+'+money(s.dbl)+'</b></div>':'')+(s.shelfBonus?'<p style="color:#ffcd2e;font-size:12px">목표 2배 달성! 다음 상점 진열 +1</p>':'')+(res.early?'<p class="sub">🏃 일찍 퇴근함</p>':'')+
  (s.nego?'<div id="nego" style="text-align:center;margin-top:10px"><div class="sub">연봉협상 · 팀장님 기분은?</div><div class="roul" id="rl">🙂</div><div id="nr"></div></div>':'')+
  '<div class="ln" style="margin-top:8px"><span>일급 지갑</span><b>'+money(R.wage)+'</b></div></div><div class="btns"><button class="b y big" id="sGo">'+(R.phase==='clear'?'엔딩 보기 ▶':'상점으로 ▶')+'</button></div>';
  show(h);coinSnd();const go=()=>R.phase==='clear'?overScr():shopScr();

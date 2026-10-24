@@ -114,10 +114,11 @@
 .ftxt small{display:block;font-size:12px;color:#ffcd2e}
 #mut{z-index:2!important;font-size:14px!important;line-height:19px;max-width:300px}
 /* position button state */
-#acts #close{white-space:nowrap;overflow:hidden;background:#5a5a66;filter:grayscale(.6) brightness(.8)}
-#acts.haspos #close{background:#38b764;filter:none;box-shadow:0 0 0 3px #a7f070}
-#acts.haspos #long,#acts.haspos #short{background:#5a5a66!important;filter:grayscale(1) brightness(.7);pointer-events:none}
-#acts.haspos #close.loss{background:#b8574a;box-shadow:0 0 0 3px #e8a08a}
+#acts #close{display:none;white-space:nowrap;overflow:hidden;flex:1 1 100%!important;width:auto!important;max-width:none!important;background:#5a5a66}
+#acts.haspos #long,#acts.haspos #short{display:none}
+#acts.haspos #close{display:block;background:#d83a3a;filter:none;box-shadow:0 0 0 3px #ff8a7a}
+#acts.haspos #close.loss{background:#2f6fd0;box-shadow:0 0 0 3px #8ab8ff}
+#acts.haspos #close.neu{background:#566c86;box-shadow:0 0 0 3px #94b0c2}
 .g-fomc #acts.haspos #close{filter:grayscale(1) brightness(.6)}
 /* settings (pixel) */
 .sTtl{letter-spacing:2px;text-shadow:3px 3px 0 #000}

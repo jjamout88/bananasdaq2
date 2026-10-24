@@ -82,22 +82,26 @@ ENG.nana=function(R,price){if(!ENG.canNana(R,price))return null;R.T.nanaLeft--;R
 ENG.bust=R=>!R.T.pos&&R.T.bal<C().MINBET+(has(R,'fee')?0:C().FEE_FLAT*2);
 // call when candle T.i finished. returns {end}
 ENG.candle=function(R){const T=R.T;T.i++;if(T.i>=T.n){ENG.endStage(R);return {end:true}}return {end:false,gim:ENG.gimAt(T,T.i),warn:ENG.warnAt(T,T.i)}};
-ENG.endStage=function(R,bust){const T=R.T;let last=null;if(T.pos)last=ENG.close(R,T.bars[T.n-1][3],'eod');
+ENG.endStage=function(R,bust,px){const T=R.T;let last=null;if(T.pos)last=ENG.close(R,px!=null?px:T.bars[T.n-1][3],px!=null?'early':'eod');
  const ret=(T.bal-T.start)/T.start*100;const pass=!bust&&ret>=T.target-1e-9;
- T.res={ret:r2(ret),pass,profit:r2(T.bal-T.start),bust:!!bust,last};R.hist.push({stage:R.stage,ret:r2(ret),pass});
+ T.res={ret:r2(ret),pass,profit:r2(T.bal-T.start),bust:!!bust,last,early:px!=null};R.hist.push({stage:R.stage,ret:r2(ret),pass});
  if(pass){R.phase='settle';ENG.settle(R)}else{R.phase='over';ENG.finishRun(R,false)}return T.res};
 ENG.settle=function(R){const T=R.T,si=ENG.stageInfo(R.stage),I=C().INTEREST,N=C().NEGO;const piggy=has(R,'piggy');
  const raw=Math.max(0,T.res.profit)*C().WAGE_PCT,pay=Math.round(Math.min(raw,R.cap));
  const s={raw:Math.round(raw),pay,capped:raw>R.cap,cap:R.cap,piggy:piggy?I.piggyStage+C().UPG.piggyStage*ENG.lv(R,'piggy'):0,nego:null,carry:R.wage,interest:0,shelfBonus:false};
  if(!si.boss&&T.res.ret>=T.target*C().SHELF_BONUS_X)s.shelfBonus=true;
+ s.dbl=T.res.ret>=T.target*C().SHELF_BONUS_X?C().DOUBLE_BONUS:0;
  if(si.boss&&R.stage<14){const over=Math.min(T.res.ret/T.target,N.maxOver);let x=rnd(),mood=null;for(const m of N.moods){if(x<m[0]){mood=m;break}x-=m[0]}if(!mood)mood=N.moods[1];
   const mx=mood[1]==='bonus'?1:mood[1];const inc=r10(N.base*over*mx*(si.ch+1));const bonus=mood[1]==='bonus'?r10((R.cap+inc)*.5):0;
   s.nego={over:r2(over),mood:mood[1],inc,bonus,before:R.cap}}
  R.settle=s;return s};
+// early leave: only when equity at px already meets target
+ENG.canLeave=function(R,px){const T=R.T;if(!T||R.phase!=='trade')return false;const g=ENG.gimAt(T,T.i);if(g==='limit'||g==='fomc')return false;const eq=T.bal+(T.pos?ENG.upnl(T,px)-ENG.fee(R,T.pos.bet):0);return eq>=T.start*(1+C().SHELF_BONUS_X*T.target/100)-1e-9};
+ENG.earlyLeave=function(R,px){if(!ENG.canLeave(R,px))return null;return ENG.endStage(R,false,px)};
 // apply settlement (called once when leaving settlement screen): pay wage, raise cap, interest, open shop
 ENG.applySettle=function(R){const s=R.settle;if(!s||s.applied)return;const I=C().INTEREST;
- R.wage+=s.pay+s.piggy;if(s.nego){R.cap+=s.nego.inc;R.wage+=s.nego.bonus}
- s.interest=Math.min(r10(s.carry*I.pct),has(R,'piggy')?I.capPiggy+C().UPG.piggyCap*ENG.lv(R,'piggy'):I.cap);R.wage+=s.interest;R.st.earned+=s.pay+s.piggy+s.interest+(s.nego?s.nego.bonus:0);
+ R.wage+=s.pay+s.piggy+(s.dbl||0);if(s.nego){R.cap+=s.nego.inc;R.wage+=s.nego.bonus}
+ s.interest=Math.min(r10(s.carry*I.pct),has(R,'piggy')?I.capPiggy+C().UPG.piggyCap*ENG.lv(R,'piggy'):I.cap);R.wage+=s.interest;R.st.earned+=s.pay+s.piggy+(s.dbl||0)+s.interest+(s.nego?s.nego.bonus:0);
  R.shelfBonus=s.shelfBonus;s.applied=true;
  if(R.stage>=14){R.phase='clear';ENG.finishRun(R,true)}else{R.phase='shop';ENG.openShop(R)}};
 // ---------- shop ----------
