@@ -109,3 +109,4 @@
 .mailw .ms{padding:6px 8px 2px;font-size:13px;color:#b13e53}.mailw .mb{padding:2px 8px 6px;line-height:16px;color:#333c57}
 .mailw .mok{display:block;margin:0 auto 8px;font-family:inherit;font-size:17px;padding:0;width:78%;min-height:48px;background:#ffcd2e;border:3px solid #000;box-shadow:inset -2px -2px 0 #ef7d57;color:#000}.mailw .mok:active{transform:translateY(2px)}
 @keyframes mpop{0%{opacity:0;margin-top:10px}30%{opacity:1;margin-left:-3px}50%{margin-left:3px}70%{margin-left:-2px}100%{margin:0}}
+.b.rs{color:#000!important}

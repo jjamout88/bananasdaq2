@@ -40,13 +40,13 @@ addEventListener('resize',fit);fit();
 function menu(){G.on=false;state='idle';const sv=loadSave();
  show('<div id="logo">바나나스닥2<small>NQ 선물 스캘핑 로그라이크</small></div><canvas id="mban" width="64" height="64" style="width:128px;height:128px;image-rendering:pixelated;margin-top:30px"></canvas><div class="mcol">'+
  (sv?'<button class="b y big" id="mC">이어하기 <small style="font-size:12px">('+ENG.stageInfo(sv.stage).name+')</small></button>':'')+
- '<button class="b g big" id="mN">처음부터</button><button class="b big" id="mD">칭호 도감</button><button class="b k big" id="mS">설정</button></div><p class="sub" style="margin-top:auto;margin-bottom:18px">모든 시나리오는 가상입니다 · 투자 권유 아님</p>');
+ '<button class="b g big rs" id="mN">처음부터</button><button class="b big" id="mD">칭호 도감</button><button class="b k big" id="mS">설정</button></div><p class="sub" style="margin-top:auto;margin-bottom:18px">모든 시나리오는 가상입니다 · 투자 권유 아님</p>');
  BART.draw($('mban').getContext('2d'),'trend',0,0,4);
  if(sv)$('mC').onclick=()=>{R=sv;resume()};
  $('mN').onclick=()=>{const go=()=>{R=ENG.newRun();META.runs++;saveMeta();save();mapScr()};sv?confirmBox('처음부터?','저장된 런('+ENG.stageInfo(sv.stage).name+')이 사라져.','새로 시작',go):go()};
  $('mD').onclick=()=>dexScr(menu);$('mS').onclick=()=>settings();}
 function settings(after,inRun){const row=(k,l)=>'<div class="ln"><span>'+l+'</span><button class="b '+(META[k]?'g':'k')+'" data-k="'+k+'" style="min-width:80px;padding:6px">'+(META[k]?'ON':'OFF')+'</button></div>';
- modal('<h2>설정</h2>'+row('snd','사운드')+row('vib','진동')+(inRun?'<div class="btns" style="flex-direction:column"><button class="b k" id="sMenu">메인 메뉴 (저장됨)</button><button class="b r" id="sNew">처음부터</button></div>':'')+'<div class="btns"><button class="b y" id="sX">닫기</button></div>');
+ modal('<h2>설정</h2>'+row('snd','사운드')+row('vib','진동')+(inRun?'<div class="btns" style="flex-direction:column"><button class="b k" id="sMenu">메인 메뉴 (저장됨)</button><button class="b r rs" id="sNew">처음부터</button></div>':'')+'<div class="btns"><button class="b y" id="sX">닫기</button></div>');
  md.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{META[b.dataset.k]=!META[b.dataset.k];saveMeta();settings(after,inRun);snd(900,.04)});if(inRun){$('sMenu').onclick=()=>{closeModal();save();menu()};$('sNew').onclick=()=>confirmBox('처음부터?','지금 런이 사라져.','새로 시작',()=>{R=ENG.newRun();META.runs++;saveMeta();save();shopTab=0;mapScr()})}$('sX').onclick=()=>{closeModal();after&&after()}}
 function dexScr(back){let h='<div class="hdr"><span>칭호 도감</span><b>'+Object.keys(META.dex).length+'/'+(ENG.TITLES.length+ENG.SPECIAL.length)+'</b></div><div class="dex">';
  ENG.TITLES.forEach((t,i)=>{const g=META.dex[t[0]];h+='<div class="'+(g?'got':'')+'">'+(g?'<canvas width="132" height="132" data-k="'+t[1]+'"></canvas>'+t[0]:'???<br><small>'+(i<15?ENG.stageInfo(i).name+' 탈락':'클리어')+'</small>')+'</div>'});
