@@ -23,7 +23,7 @@ ENG.makeChart=function(isBoss){const P=ENG.pools(),n=isBoss?C().N_BOSS:C().N_NOR
  let c=P.all[di].slice(o,o+n).map(k=>[k[0],k[1],k[2],k[3],k[4]||0]);const hf=rnd()<.5,vf=rnd()<.5;
  if(hf)c=c.reverse().map(([o,h,l,cl,v])=>[cl,h,l,o,v]);
  const m=c[0][0];if(vf)c=c.map(([o,h,l,cl,v])=>[2*m-o,2*m-l,2*m-h,2*m-cl,v]);
- const k=20000/m;return {bars:c.map(b=>[r2(b[0]*k),r2(b[1]*k),r2(b[2]*k),r2(b[3]*k),b[4]|0]),src:[di,o,hf,vf]}};
+ const k=20000/m,vx=C().VOL_X||1,q=x=>r2(20000+(x*k-20000)*vx);return {bars:c.map(b=>[q(b[0]),q(b[1]),q(b[2]),q(b[3]),b[4]|0]),src:[di,o,hf,vf]}};
 // ---------- run ----------
 ENG.newRun=()=>({ver:1,stage:0,wage:0,cap:C().WAGE_CAP0,levU:[1],betU:[10],lev:1,pct:10,eq:[],slots:C().SLOTS,comp:0,shelfBonus:false,shop:null,phase:'map',T:null,
  st:{trades:0,wins:0,longN:0,shortN:0,liq:0,bait:0,nana:0,bought:0,earned:0},hist:[],settle:null,result:null});
@@ -55,8 +55,8 @@ ENG.betSize=function(R){const T=R.T;let bet;
 ENG.trendAt=(T,i)=>{if(i<3)return 0;let s=0;for(let j=i-3;j<i;j++){const d=Math.sign(T.bars[j][3]-T.bars[j][0]);if(!d)return 0;s+=d}return s===3?1:s===-3?-1:0};
 ENG.upnl=(T,price)=>T.pos?(price-T.pos.px)*T.pos.dir*T.pos.pv:0;
 ENG.locked=T=>{const g=ENG.gimAt(T,T.i);return g==='fomc'};
-ENG.enter=function(R,dir,price){const T=R.T;if(!T||R.phase!=='trade')return {err:'phase'};if(T.pos&&T.pos.dir===dir)return {err:'same'};
- let closed=null;if(T.pos)closed=ENG.close(R,price,'rev');
+ENG.enter=function(R,dir,price){const T=R.T;if(!T||R.phase!=='trade')return {err:'phase'};if(T.pos)return {err:T.pos.dir===dir?'same':'open'};
+ let closed=null;
  const bet=ENG.betSize(R);if(!bet)return {err:'잔고 부족',closed};
  const f=ENG.fee(R,bet);T.bal=r2(T.bal-f);T.fees+=f;const tr=ENG.trendAt(T,T.i);
  T.pos={dir,px:price,bet,pv:Math.sqrt(bet)/C().PV_DIV*R.lev,lev:R.lev,i0:T.i,tr:tr===dir?1:tr===-dir?-1:0,first:T.opened===0};

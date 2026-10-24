@@ -10,11 +10,10 @@ function upnl(){return T?ENG.upnl(T,G.price):0}
 const BMAP=Object.fromEntries(BANANAS.map(b=>[b[0],b]));
 const TN=['일반','희귀','전설'];
 // ---------- meta / settings ----------
-let META={snd:true,vib:true,tut:false,dex:{},runs:0,clears:0};
+let META={snd:true,bgm:true,bgmVol:.6,tut:false,dex:{},runs:0,clears:0};
 try{Object.assign(META,JSON.parse(localStorage.getItem(CFG.META_KEY)||'{}'))}catch(e){}
 const saveMeta=()=>{try{localStorage.setItem(CFG.META_KEY,JSON.stringify(META))}catch(e){}};
 const _snd=snd;snd=function(...a){if(META.snd)_snd(...a)};
-const vib=p=>{if(META.vib&&navigator.vibrate)try{navigator.vibrate(p)}catch(e){}};
 function save(){if(!R)return;try{if(R.phase==='over'||R.phase==='clear')localStorage.removeItem(CFG.SAVE_KEY);else localStorage.setItem(CFG.SAVE_KEY,JSON.stringify(R))}catch(e){}}
 function loadSave(){try{const r=JSON.parse(localStorage.getItem(CFG.SAVE_KEY));return r&&r.ver===1&&r.phase&&r.stage>=0&&r.stage<=14?r:null}catch(e){return null}}
 // ---------- small ui helpers ----------
@@ -40,14 +39,15 @@ addEventListener('resize',fit);fit();
 function menu(){G.on=false;state='idle';const sv=loadSave();
  show('<div id="logo">바나나스닥2<small>NQ 선물 스캘핑 로그라이크</small></div><canvas id="mban" width="64" height="64" style="width:128px;height:128px;image-rendering:pixelated;margin-top:30px"></canvas><div class="mcol">'+
  (sv?'<button class="b y big" id="mC">이어하기 <small style="font-size:12px">('+ENG.stageInfo(sv.stage).name+')</small></button>':'')+
- '<button class="b g big rs" id="mN">처음부터</button><button class="b big" id="mD">칭호 도감</button><button class="b k big" id="mS">설정</button></div><p class="sub" style="margin-top:auto;margin-bottom:18px">모든 시나리오는 가상입니다 · 투자 권유 아님</p>');
+ '<button class="b g big rs" id="mN">처음부터</button><button class="b big" id="mD">칭호 도감</button><button class="b k big" id="mS">⚙ 설정</button></div><p class="sub" style="margin-top:auto;margin-bottom:18px">모든 시나리오는 가상입니다 · 투자 권유 아님</p>');
  BART.draw($('mban').getContext('2d'),'trend',0,0,4);
  if(sv)$('mC').onclick=()=>{R=sv;resume()};
  $('mN').onclick=()=>{const go=()=>{R=ENG.newRun();META.runs++;saveMeta();save();mapScr()};sv?confirmBox('처음부터?','저장된 런('+ENG.stageInfo(sv.stage).name+')이 사라져.','새로 시작',go):go()};
  $('mD').onclick=()=>dexScr(menu);$('mS').onclick=()=>settings();}
-function settings(after,inRun){const row=(k,l)=>'<div class="ln"><span>'+l+'</span><button class="b '+(META[k]?'g':'k')+'" data-k="'+k+'" style="min-width:80px;padding:6px">'+(META[k]?'ON':'OFF')+'</button></div>';
- modal('<h2>설정</h2>'+row('snd','사운드')+row('vib','진동')+(inRun?'<div class="btns" style="flex-direction:column"><button class="b k" id="sMenu">메인 메뉴 (저장됨)</button><button class="b r rs" id="sNew">처음부터</button></div>':'')+'<div class="btns"><button class="b y" id="sX">닫기</button></div>');
- md.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{META[b.dataset.k]=!META[b.dataset.k];saveMeta();settings(after,inRun);snd(900,.04)});if(inRun){$('sMenu').onclick=()=>{closeModal();save();menu()};$('sNew').onclick=()=>confirmBox('처음부터?','지금 런이 사라져.','새로 시작',()=>{R=ENG.newRun();META.runs++;saveMeta();save();shopTab=0;mapScr()})}$('sX').onclick=()=>{closeModal();after&&after()}}
+function settings(after,inRun){BGM.setHold(false);const row=(k,l,ic)=>'<div class="sRow"><span>'+ic+' '+l+'</span><button class="b sTg '+(META[k]?'g':'k')+'" data-k="'+k+'">'+(META[k]?'ON':'OFF')+'</button></div>';const v=Math.round((META.bgmVol==null?.6:META.bgmVol)*100);
+ modal('<h2 class="sTtl">⚙ 설정</h2><div class="sPan">'+row('bgm','배경음악','🎵')+'<div class="sRow sVol'+(META.bgm?'':' dim')+'"><span>🔊 BGM 볼륨</span><b id="sVv">'+v+'</b></div><input type="range" id="sVol" class="sRng" min="0" max="100" step="5" value="'+v+'">'+row('snd','효과음','💥')+'</div>'+(inRun?'<div class="btns" style="flex-direction:column"><button class="b k" id="sMenu">메인 메뉴 (저장됨)</button><button class="b r rs" id="sNew">처음부터</button></div>':'')+'<div class="btns"><button class="b y big" id="sX">닫기</button></div>');
+ const rg=$('sVol');rg.oninput=()=>{META.bgmVol=rg.value/100;$('sVv').textContent=rg.value;BGM.sync()};rg.onchange=()=>saveMeta();
+ md.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{META[b.dataset.k]=!META[b.dataset.k];saveMeta();BGM.sync();settings(after,inRun);snd(900,.04)});if(inRun){$('sMenu').onclick=()=>{closeModal();save();menu()};$('sNew').onclick=()=>confirmBox('처음부터?','지금 런이 사라져.','새로 시작',()=>{R=ENG.newRun();META.runs++;saveMeta();save();shopTab=0;mapScr()})}$('sX').onclick=()=>{closeModal();after&&after()}}
 function dexScr(back){let h='<div class="hdr"><span>칭호 도감</span><b>'+Object.keys(META.dex).length+'/'+(ENG.TITLES.length+ENG.SPECIAL.length)+'</b></div><div class="dex">';
  ENG.TITLES.forEach((t,i)=>{const g=META.dex[t[0]];h+='<div class="'+(g?'got':'')+'">'+(g?'<canvas width="132" height="132" data-k="'+t[1]+'"></canvas>'+t[0]:'???<br><small>'+(i<15?ENG.stageInfo(i).name+' 탈락':'클리어')+'</small>')+'</div>'});
  ENG.SPECIAL.forEach(t=>{const g=META.dex[t[0]];h+='<div class="'+(g?'got':'')+'">'+(g?'<canvas width="132" height="132" data-k="'+t[1]+'"></canvas>'+t[0]:'???<br><small>'+t[3]+'</small>')+'</div>'});
@@ -98,31 +98,39 @@ function mailStorm(){clearMails();const wr=$('wrap'),W=wr.clientWidth,H=wr.clien
   const w=Math.min(230,W-20);d.style.width=w+'px';d.style.left=Math.round(6+Math.random()*(W-w-12))+'px';const wt=wr.getBoundingClientRect().top,at=$('acts').getBoundingClientRect().top-wt,mh=200,lo=H*.2,hi=Math.max(lo,at-mh-8);d.style.top=Math.round(lo+(hi-lo)*(k/(n-1||1))*.85+Math.random()*(hi-lo)*.15)+'px';d.style.transform='rotate('+((Math.random()-.5)*5).toFixed(1)+'deg)';d.style.zIndex=30+k;
   d.innerHTML='<div class="mt"><span>✉ 새 메일</span><i>✕</i></div><div class="ms">'+esc(m[0])+'</div><div class="mb">'+esc(m[1].replace('{N}',[3.14,0.5,69,12,7.77,404,1.5][Math.random()*7|0])).replace(/\n/g,'<br>')+'</div><button class="mok">확인</button>';
   d.querySelector('.mok').onclick=e=>{e.stopPropagation();snd(500,.04);d.remove()};
-  wr.appendChild(d);snd(1320,.06);setTimeout(()=>snd(1760,.08),70);vib(25)},k*140)}
+  wr.appendChild(d);snd(1320,.06);setTimeout(()=>snd(1760,.08),70);},k*140)}
 function applyGim(){const g=T?ENG.gimAt(T,T.i):null;const cls=g?'g-'+g:'';if(cls!==gimCls){const gm=$('game');if(gimCls)gm.classList.remove(gimCls);if(cls)gm.classList.add(cls);gimCls=cls;if(!window.WCH)window.WCH=FX2.gfx();if(g&&g!=='cpi')WCH.start(g);else WCH.stop();if(g==='cpi')mailStorm();
  if(g==='fomc')$('lockT').textContent='🎤 의장님 연설 중… 버튼 잠김';
- if(g){snd(220,.25,'sawtooth',.05);vib(60)}lastHud={}}}
+ if(g){snd(220,.25,'sawtooth',.05);}lastHud={}}}
+function gimOn(){return !!(T&&ENG.gimAt(T,T.i))}
+function flash(k){const f=$('flash');if(!f)return;f.className='f'+k;setTimeout(()=>f.className='',200)}
+function floatTxt(t,g,sub){const e=document.createElement('div');e.className='ftxt';e.style.color=g?'#ff6b6b':'#6bb0ff';e.innerHTML=esc(t)+(sub?'<small>'+esc(sub)+'</small>':'');$('wrap').appendChild(e);setTimeout(()=>e.remove(),1200)}
 function flt(txt,col,sub){const d=document.createElement('div');d.className='flt';d.style.top='300px';d.style.color=col;d.innerHTML=esc(txt)+(sub?'<small>'+esc(sub)+'</small>':'');$('wrap').appendChild(d);setTimeout(()=>d.remove(),1150)}
 function onClose(r){if(!r)return;const s=(r.p>=0?'+':'')+fmt(r.p-r.fee);
- if(r.why==='liq'){const l=$('liq');l.style.display='block';setTimeout(()=>l.style.display='none',1300);shake=20;vib([100,50,200]);snd(80,.6,'sawtooth',.1,-40);setMood('faint',120);sayM(pick(MLOSS))}
- else if(r.why==='bait'){say('미끼 발동!',45,'Y',false);vib(80);snd(300,.2);flt(s,'#ffb000','청산 방어 · 베팅 50% 손실')}
+ if(r.why==='liq'){const l=$('liq');l.style.display='block';setTimeout(()=>l.style.display='none',1800);shake=30;burst(97,200,90,['r','o','Y','w','d'],3.5,45);floatTxt(s,false,'강제청산');snd(80,.6,'sawtooth',.1,-40);setMood('faint',120);sayM(pick(MLOSS))}
+ else if(r.why==='bait'){say('미끼 발동!',45,'Y',false);snd(300,.2);flt(s,'#ffb000','청산 방어 · 베팅 50% 손실')}
  else if(r.why==='nana'){say('나나바!!',50,'Y',true);coinSnd();flt(s,'#ffcd2e','손실 → 수익 뒤집기')}
- else if(r.p>0){coinSnd();setMood('happy');flt(s,'#ff6b6b',r.tags.join(' '));if(r.p>T.start*.05)coinRain(12);if(T.combo>=3)say(T.combo+'연승!',35,'Y',false)}
- else{snd(150,.2,'square',.05);setMood('sad');flt(s,'#6bb0ff')}
+ else if(r.p>0){setMood('happy',100);burst(97,200,Math.min(120,20+r.p/5|0),['Y','g','B','P','w','p'],2.5+Math.min(3,r.p/200),50);if(r.p>T.start*.02){coinSnd();coinRain(Math.min(25,5+r.p/40|0))}else snd(1175,.1);flash('pos');floatTxt(s,true,r.tags.join(' '));
+  if(T.combo>=2){const c=$('combo');if(c){c.textContent=T.combo+' COMBO 🔥';c.style.display='block';clearTimeout(c._t);c._t=setTimeout(()=>c.style.display='none',1500)}}
+  if(r.why==='close'&&!gimOn())say(pick(['챙겼다!','익절!','개꿀!','푸근하다','익절은 항상 옳다','개같이 부활!']),55,'Y',true);else shake=Math.max(shake,8)}
+ else{setMood('sad',100);shake=Math.max(shake,12);snd(200,.2,'sawtooth',.05,-80);burst(97,200,10,['G','d'],1,30);floatTxt(s,false);
+  if(r.why==='close'&&!gimOn())say(pick(['아이고..','손절..','눈물의 CLOSE','손절은 과학이다','아 ㅋㅋ 시드 증발']),55,'S',false)}
  const bb=$('baitB');if(bb)bb.textContent=T.baitN+'/'+(CFG.BAIT_N+ENG.lv(R,'bait'));
+ if(r.why!=='liq'){mutTimer=-2000;setTimeout(()=>{if(G.on)mutter()},1100)}
  if(T.reached&&!T._said){T._said=1;say('목표 달성!',50,'Y',true);bell()}save()}
-function act(dir){if(!G.on||paused||!T)return;if(ENG.locked(T)){const b=$(dir>0?'long':dir<0?'short':'close');b.classList.remove('lk');void b.offsetWidth;b.classList.add('lk');snd(120,.08);vib(30);return}
+function act(dir){if(!G.on||paused||!T)return;if(dir&&T.pos)return;if(ENG.locked(T)){const b=$(dir>0?'long':dir<0?'short':'close');if(dir&&T.pos)return;b.classList.remove('lk');void b.offsetWidth;b.classList.add('lk');snd(120,.08);return}
  if(dir===0){const r=ENG.close(R,G.price,'close');if(r)onClose(r);return}
- const r=ENG.enter(R,dir,G.price);if(r.err==='same')return;if(r.closed)onClose(r.closed);if(r.err){toast(r.err==='phase'?'':'잔고 부족! 최소 베팅 $'+CFG.MINBET,true);checkBust();return}
- snd(dir>0?880:440,.06);vib(20);mutTimer=0;save()}
-function doNana(){if(!G.on||paused)return;const r=ENG.nana(R,G.price);if(r){onClose(r);vib([40,40,40])}else snd(120,.08)}
+ const r=ENG.enter(R,dir,G.price);if(r.err==='same'||r.err==='open')return;if(r.closed)onClose(r.closed);if(r.err){toast(r.err==='phase'?'':'잔고 부족! 최소 베팅 $'+CFG.MINBET,true);checkBust();return}
+ snd(dir>0?880:440,.06);const bx=dir>0?35:160;burst(bx,375,14,dir>0?['r','p','Y','w']:['B','b','c','w'],1.8,25);if(R.lev>1){shake=Math.max(shake,6);burst(bx,375,16,['o','r','Y'],2,25)}
+ if(!gimOn()){if(dir>0)say(pick(['지금이니!','지금이니!','가즈아!!','가즈아!!','롱롱롱!','떡상 가즈아!']),55,'L');else say(pick(['간다간다 숏간다!','숏숏숏!','숏숏숏!','지금이니!']),55,'S')}else shake=Math.max(shake,8);setMood('happy',40);save()}
+function doNana(){if(!G.on||paused)return;const r=ENG.nana(R,G.price);if(r){onClose(r);}else snd(120,.08)}
 function checkBust(){if(T&&ENG.bust(R)&&R.phase==='trade'){ENG.endStage(R,true);finishStage()}}
 $('long').onclick=()=>act(1);$('short').onclick=()=>act(-1);$('close').onclick=()=>act(0);
 $('pause').onclick=()=>{if(G.on&&!paused){paused=true;save();pauseMenu(false)}};
-function pauseMenu(res){modal('<h2>'+(res?'이어하기':'일시정지')+'</h2><p>'+ENG.stageInfo(R.stage).name+' · '+(T.i+1)+'/'+T.n+'봉\n잔고 '+money(T.bal)+'</p><div class="btns"><button class="b k" id="pM">메뉴로</button><button class="b k" id="pS">설정</button><button class="b y" id="pG">계속 ▶</button></div>');
- $('pG').onclick=()=>{closeModal();startGo()};$('pS').onclick=()=>settings(()=>pauseMenu(res));$('pM').onclick=()=>{closeModal();save();G.on=false;menu()}}
+function pauseMenu(res){BGM.setHold(true);modal('<h2>'+(res?'이어하기':'일시정지')+'</h2><p>'+ENG.stageInfo(R.stage).name+' · '+(T.i+1)+'/'+T.n+'봉\n잔고 '+money(T.bal)+'</p><div class="btns"><button class="b k" id="pM">메뉴로</button><button class="b k" id="pS">⚙ 설정</button><button class="b y" id="pG">계속 ▶</button></div>');
+ $('pG').onclick=()=>{closeModal();BGM.setHold(false);startGo()};$('pS').onclick=()=>settings(()=>pauseMenu(res));$('pM').onclick=()=>{closeModal();BGM.setHold(false);save();G.on=false;menu()}}
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&G.on&&!paused){paused=true;save();pauseMenu(false)}});
-function step(dt){if(!G.on||paused)return;G.t+=dt*SPEED;
+function step(dt){if(!G.on||paused)return;G.t+=dt*SPEED;mutTimer+=dt;if(mutTimer>=4200){mutTimer=-Math.random()*1500;if(!$('mut').classList.contains('show'))mutter()}
  const k=Math.min(30,G.t/CAN*30|0);G.price=G.path[k];G.cur[3]=G.price;G.cur[1]=Math.max(G.cur[1],G.price);G.cur[2]=Math.min(G.cur[2],G.price);
  const lq=ENG.check(R,G.price);if(lq){onClose(lq);checkBust();if(!G.on)return}
  if(G.t>=CAN){G.t=0;const b=T.bars[T.i];G.cur=b.slice();G.price=b[3];
@@ -130,10 +138,10 @@ function step(dt){if(!G.on||paused)return;G.t+=dt*SPEED;
   G.i=T.i;const nb=T.bars[T.i];G.cur=[nb[0],nb[0],nb[0],nb[0],nb[4]];G.path=mkPath(nb);G.price=nb[0];
   const sk=$('news')._sticky;if(news[T.i]&&!sk&&!ev.warn&&!ev.gim)setNews(news[T.i],true);
   if(ev.warn)clearMails();
-  if(ev.warn){const wn=ENG.warnIn(T,T.i);if(!window.WCH)window.WCH=FX2.gfx();if(wn===CFG.GIMMICK.warn)WCH.warn(ev.warn);setNews('⚠ '+(wn>1?wn+'봉 뒤':'다음 봉')+': '+ENG.BOSS_INFO[ev.warn][0]+'!',true,true);snd(1200,.1);vib(40)}
+  if(ev.warn){const wn=ENG.warnIn(T,T.i);if(!window.WCH)window.WCH=FX2.gfx();if(wn===CFG.GIMMICK.warn)WCH.warn(ev.warn);setNews('⚠ '+(wn>1?wn+'봉 뒤':'다음 봉')+': '+ENG.BOSS_INFO[ev.warn][0]+'!',true,true);snd(1200,.1);}
   else if(ev.gim)setNews('⚠ '+ENG.BOSS_INFO[ev.gim][0]+'!',true,true);else clearSticky();
   applyGim();checkBust();save()}
- if(++mutTimer>380){mutTimer=0;if(Math.random()<.6)mutter()}}
+}
 function finishStage(){G.on=false;clearMails();applyGim();state='bell';bell();const res=T.res;say(res.bust?'깡통!':'장 마감',50,res.bust?'L':'Y',false);
  if(R.phase==='over'||R.phase==='clear')recordRun();save();setTimeout(()=>{state='idle';gimClear();R.phase==='settle'?settleScr():overScr()},1600)}
 function gimClear(){if(gimCls)$('game').classList.remove(gimCls);gimCls=''}
@@ -144,7 +152,8 @@ function hud(){const p=upnl(),cpi=false;const set=(id,v,prop='textContent')=>{if
  const pr=Math.max(0,Math.min(1,(T.bal+p-T.start)/(tgt-T.start)));const gw=(pr*100|0)+'%';if(lastHud.gw!==gw){lastHud.gw=gw;$('goal').firstChild.style.width=gw}
  const n=$('nana');if(n){const ok=ENG.canNana(R,G.price);const ns=ok+'|'+T.nanaLeft;if(ns!==nanaState){nanaState=ns;n.disabled=!ok;n.textContent=T.nanaLeft>0?'나나바'+(T.nanaLeft>1?' ×'+T.nanaLeft:''):'사용함'}}}
 let last=0;
-function loop(ts){const dt=Math.min(100,ts-(last||ts));last=ts;if(G.on||state==='bell'){step(dt);if(T){drawChart();drawFx();if(G.on)hud()}}requestAnimationFrame(loop)}
+let _bs='';function btnState(){const k=(T&&T.pos&&G.on)?'p':'n';if(k===_bs)return;_bs=k;const a=$('acts');if(a)a.classList.toggle('haspos',k==='p')}
+function loop(ts){const dt=Math.min(100,ts-(last||ts));last=ts;if(G.on||state==='bell'){step(dt);if(T){drawChart();drawFx();if(G.on)hud()}btnState()}const w=$('wrap');if(shake>0){w.style.transform='translate('+((Math.random()-.5)*shake).toFixed(1)+'px,'+((Math.random()-.5)*shake).toFixed(1)+'px)';shake*=.9;if(shake<.5)shake=0}else if(w.style.transform)w.style.transform='';requestAnimationFrame(loop)}
 requestAnimationFrame(loop);
 // ---------- settlement ----------
 function settleScr(){const s=R.settle,res=R.T.res;const firstTime=!s.applied;ENG.applySettle(R);save();const si=ENG.stageInfo(R.stage);
@@ -183,7 +192,7 @@ function shopScr(){R.phase='shop';save();const sh=R.shop;const nl=ENG.nextLev(R)
  ov.querySelectorAll('.stab').forEach(e=>e.onclick=()=>{shopTab=+e.dataset.t;armed=null;snd(700,.03);shopScr()});
  $('sGear').onclick=()=>settings(null,true);
  ov.querySelectorAll('[data-u]').forEach(e=>e.onclick=()=>{const i=+e.dataset.u,b=R.eq[i];const r=ENG.upgrade(R,i);save();if(r.err){toast(r.err,true);return}altar(b.id,r,()=>shopScr())});
- const arm=(id,fn)=>{const e=$(id);if(!e)return;e.onclick=()=>{if(armed!==id){armed=id;snd(800,.03);shopScr();return}armed=null;const r=fn();if(r&&r.err&&r.err!=='full'){toast(r.err,true);snd(120,.1)}else if(r&&r.ok){coinSnd();vib(20)}save();if(!r||r.err!=='full')shopScr()}};
+ const arm=(id,fn)=>{const e=$(id);if(!e)return;e.onclick=()=>{if(armed!==id){armed=id;snd(800,.03);shopScr();return}armed=null;const r=fn();if(r&&r.err&&r.err!=='full'){toast(r.err,true);snd(120,.1)}else if(r&&r.ok){coinSnd();}save();if(!r||r.err!=='full')shopScr()}};
  arm('uL',()=>ENG.buyLev(R));arm('uB',()=>ENG.buyBet(R));arm('s4',()=>ENG.buySlot(R));
  sh.offer.forEach((o,k)=>arm('o'+k,()=>{if(R.eq.length>=R.slots){replacePick(k);return {err:'full'}}return ENG.buy(R,k)}));
  const rr=$('rr');if(rr)rr.onclick=()=>{const r=ENG.reroll(R);if(r.err){toast(r.err,true);return}snd(600,.05);snd(900,.05);armed=null;save();shopScr()};
@@ -200,7 +209,7 @@ function bananaSheet(i){const b=R.eq[i],m=BMAP[b.id],uc=ENG.upgCost(R,i);
  if(uc&&$('bsU'))$('bsU').onclick=()=>{const r=ENG.upgrade(R,i);save();if(r.err){toast(r.err,true);return}altar(b.id,r,()=>{shopScr();bananaSheet(i)})}}
 // ---------- upgrade altar animation (holy pixel scene) ----------
 function altar(id,r,done){modal('<canvas id="alC" width="320" height="300" style="width:320px;height:300px;image-rendering:pixelated;background:#0b0c16"></canvas><h2 id="alT" style="min-height:26px;margin-top:8px"></h2><div class="btns"><button class="b y" id="alX" style="visibility:hidden">확인</button></div>');
- const OK=r.success;const A=FX2.altar($('alC'),id,OK,()=>{$('alT').textContent=OK?'✨ 강화 성공! +'+r.lv:'아무 일도 일어나지 않았다…';$('alT').style.color=OK?'#ffcd2e':'#94b0c2';$('alX').style.visibility='visible';if(OK){bell();vib([30,40,80])}else snd(180,.4,'triangle',.05,-60)});
+ const OK=r.success;const A=FX2.altar($('alC'),id,OK,()=>{$('alT').textContent=OK?'✨ 강화 성공! +'+r.lv:'아무 일도 일어나지 않았다…';$('alT').style.color=OK?'#ffcd2e':'#94b0c2';$('alX').style.visibility='visible';if(OK){bell();}else snd(180,.4,'triangle',.05,-60)});
  window.__ALTAR=A;const lp=()=>{if(!$('alC'))return;const f=A.step();if(f>=60&&f<190&&f%15===0)snd(400+f*4,.06,'triangle',.04);if(f<600)requestAnimationFrame(lp)};requestAnimationFrame(lp);$('alX').onclick=()=>{closeModal();done()}}
 // ---------- run over / clear ----------
 function recordRun(){if(R._rec||!R.result)return;R._rec=1;const res=R.result;[res.title,...res.specials].forEach(t=>{if(!META.dex[t])META.dex[t]=Date.now()});if(res.clear)META.clears++;saveMeta()}
@@ -214,3 +223,5 @@ function overScr(){if(!R||!R.result)return;recordRun();save();G.on=false;state='
 // ---------- test hook ----------
 window.__BN={get R(){return R},set R(v){R=v},ENG,act,doNana,menu,mapScr,shopScr,settleScr,overScr,resume,enterTrade,setSpeed:v=>SPEED=v,state:()=>({on:G.on,paused,phase:R&&R.phase,i:T&&T.i,price:G.price}),unpause:()=>{closeModal();paused=false}};
 menu();
+
+delete META.vib;
