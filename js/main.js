@@ -133,6 +133,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden&&G.on&&!pau
 function step(dt){if(!G.on||paused)return;G.t+=dt*SPEED;mutTimer+=dt;if(mutTimer>=4200){mutTimer=-Math.random()*1500;if(!$('mut').classList.contains('show'))mutter()}
  const k=Math.min(30,G.t/CAN*30|0);G.price=G.path[k];G.cur[3]=G.price;G.cur[1]=Math.max(G.cur[1],G.price);G.cur[2]=Math.min(G.cur[2],G.price);
  const lq=ENG.check(R,G.price);if(lq){onClose(lq);checkBust();if(!G.on)return}
+ mcTick();
  if(G.t>=CAN){G.t=0;const b=T.bars[T.i];G.cur=b.slice();G.price=b[3];
   const ev=ENG.candle(R);if(ev.end){finishStage();return}
   G.i=T.i;const nb=T.bars[T.i];G.cur=[nb[0],nb[0],nb[0],nb[0],nb[4]];G.path=mkPath(nb);G.price=nb[0];
@@ -142,8 +143,15 @@ function step(dt){if(!G.on||paused)return;G.t+=dt*SPEED;mutTimer+=dt;if(mutTimer
   else if(ev.gim)setNews('⚠ '+ENG.BOSS_INFO[ev.gim][0]+'!',true,true);else clearSticky();
   applyGim();checkBust();save()}
 }
-function finishStage(){G.on=false;clearMails();applyGim();state='bell';bell();const res=T.res;say(res.bust?'깡통!':'장 마감',50,res.bust?'L':'Y',false);
+function finishStage(){G.on=false;mcOff();clearMails();applyGim();state='bell';bell();const res=T.res;say(res.bust?'깡통!':'장 마감',50,res.bust?'L':'Y',false);
  if(R.phase==='over'||R.phase==='clear')recordRun();save();setTimeout(()=>{state='idle';gimClear();R.phase==='settle'?settleScr():overScr()},1600)}
+// margin call (ported from original): loss >= MC_ON of bet -> amber frame + monkey 喝!! slam, recover below MC_OFF. Visual only, no money effect.
+const MC_ON=.75,MC_OFF=.6,MC_IN_LIMIT=true;
+function mcOff(){$('game').classList.remove('mc');if(G.danger)dangerOff()}
+function mcTick(){if(!T||!T.pos){mcOff();return}{const g=ENG.gimAt(T,T.i);if(g&&(g!=='limit'||!MC_IN_LIMIT)){mcOff();return}}
+ const r=-upnl()/T.pos.bet;$('game').classList.toggle('mc',r>=MC_ON);
+ if(r>=MC_ON&&!G.danger){G.danger=1;T.mcN=(T.mcN||0)+1;sayM(pick(['마진콜 떴다!!','증거금 부족이래','샤갈!!','나락 간다','계좌 녹는 중…','레버리지에 쓰이는 중']));const m=$('mm');m.className='';void m.offsetWidth;m.className='slam '+(T.pos.dir>0?'up':'dn');$('shout').style.display='none';shake=25;snd(150,.4,'sawtooth',.09,200);clearTimeout(G.mt);G.mt=setTimeout(()=>{if(G.danger)m.className='ling '+(T.pos&&T.pos.dir>0?'up':'dn')},1400);if(mood!=='panic')setMood('panic',30)}
+ else if(r<MC_OFF&&G.danger){T.mcs=(T.mcs||0)+1;dangerOff();$('game').classList.remove('mc')}}
 function gimClear(){if(gimCls)$('game').classList.remove(gimCls);gimCls=''}
 function hud(){const p=upnl(),cpi=!!(T&&ENG.gimAt(T,T.i)==='limit');const set=(id,v,prop='textContent')=>{if(lastHud[id]!==v){lastHud[id]=v;$(id)[prop]=v}};
  set('bal',cpi?'$???':fmt(T.bal+p));set('price',cpi?'???':G.price.toFixed(2));set('timer',(T.i+1)+'/'+T.n+'봉');
