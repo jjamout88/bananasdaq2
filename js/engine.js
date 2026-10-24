@@ -91,9 +91,8 @@ ENG.settle=function(R){const T=R.T,si=ENG.stageInfo(R.stage),I=C().INTEREST,N=C(
  const s={raw:Math.round(raw),pay,capped:raw>R.cap,cap:R.cap,piggy:piggy?I.piggyStage+C().UPG.piggyStage*ENG.lv(R,'piggy'):0,nego:null,carry:R.wage,interest:0,shelfBonus:false};
  if(!si.boss&&T.res.ret>=T.target*C().SHELF_BONUS_X)s.shelfBonus=true;
  s.dbl=T.res.ret>=T.target*C().SHELF_BONUS_X?C().DOUBLE_BONUS:0;
- if(si.boss&&R.stage<14){const over=Math.min(T.res.ret/T.target,N.maxOver);let x=rnd(),mood=null;for(const m of N.moods){if(x<m[0]){mood=m;break}x-=m[0]}if(!mood)mood=N.moods[1];
-  const mx=mood[1]==='bonus'?1:mood[1];const inc=r10(N.base*over*mx*(si.ch+1));const bonus=mood[1]==='bonus'?r10((R.cap+inc)*.5):0;
-  s.nego={over:r2(over),mood:mood[1],inc,bonus,before:R.cap}}
+ if(si.boss&&R.stage<14){const over=T.res.ret/T.target;let tier=1;N.tiers.forEach((x,j)=>{if(over>=x[0]-1e-9)tier=j+1});const mult=N.tiers[tier-1][1];
+  s.nego={over:r2(over),tier,mult,inc:r10(N.base*mult*(si.ch+1)),bonus:0,before:R.cap}}
  R.settle=s;return s};
 // early leave: only when equity at px already meets target
 ENG.canLeave=function(R,px){const T=R.T;if(!T||R.phase!=='trade')return false;const g=ENG.gimAt(T,T.i);if(g==='limit'||g==='fomc')return false;const eq=T.bal+(T.pos?ENG.upnl(T,px)-ENG.fee(R,T.pos.bet):0);return eq>=T.start*(1+C().SHELF_BONUS_X*T.target/100)-1e-9};

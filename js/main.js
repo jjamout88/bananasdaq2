@@ -167,18 +167,19 @@ function loop(ts){const dt=Math.min(100,ts-(last||ts));last=ts;if(G.on||state===
 requestAnimationFrame(loop);
 // ---------- settlement ----------
 function settleScr(){const s=R.settle,res=R.T.res;const firstTime=!s.applied;ENG.applySettle(R);save();const si=ENG.stageInfo(R.stage);
- let h='<div class="ttl" style="margin-top:40px">'+si.name+' 클리어!</div><div class="box" style="text-align:left"><div class="ln"><span>수익률</span><b>+'+res.ret.toFixed(1)+'% / 목표 '+R.T.target+'%</b></div>'+
- '<div class="ln"><span>수익 × 30%</span><b>'+money(s.raw)+'</b></div><div class="ln'+(s.capped?' r':'')+'"><span>일급'+(s.capped?' (상한 컷)':'')+'</span><b>'+money(s.pay)+'</b></div>'+
- (s.piggy?'<div class="ln"><span>저금통</span><b>+'+money(s.piggy)+'</b></div>':'')+'<div class="ln"><span>이자 (보유 '+money(s.carry)+'의 10%)</span><b>+'+money(s.interest)+'</b></div>'+
- (s.capped?'<p class="sub">상한에 막혔어… 보스 잡고 연봉협상 가자</p>':'')+(s.dbl?'<div class="ln"><span>목표 2배 보너스</span><b>+'+money(s.dbl)+'</b></div>':'')+(s.shelfBonus?'<p style="color:#ffcd2e;font-size:12px">목표 2배 달성! 다음 상점 진열 +1</p>':'')+(res.early?'<p class="sub">🏃 일찍 퇴근함</p>':'')+
- (s.nego?'<div id="nego" style="text-align:center;margin-top:10px"><div class="sub">연봉협상 · 팀장님 기분은?</div><div class="roul" id="rl">🙂</div><div id="nr"></div></div>':'')+
- '<div class="ln" style="margin-top:8px"><span>일급 지갑</span><b>'+money(R.wage)+'</b></div></div><div class="btns"><button class="b y big" id="sGo">'+(R.phase==='clear'?'엔딩 보기 ▶':'상점으로 ▶')+'</button></div>';
+ const items=[['일급',s.pay],['이자',s.interest],['저금통',s.piggy],['2배 보너스',s.dbl],['보너스',s.nego&&s.nego.bonus]].filter(x=>x[1]>0),tot=items.reduce((a,x)=>a+x[1],0);
+ let h='<div class="ttl" style="margin-top:40px">'+si.name+' 클리어!</div><div class="box" style="text-align:left"><div class="sub" style="text-align:center">수익률 +'+res.ret.toFixed(1)+'% / 목표 '+R.T.target+'%'+(res.early?' · 🏃 일찍 퇴근':'')+'</div>'+
+ '<div class="mbig">+'+money(tot)+'</div><div class="mbd">'+items.map(x=>x[0]+' +'+money(x[1])).join(' · ')+'</div>'+
+ '<div class="mwal"><span>지갑</span><b>'+money(R.wage-tot)+' → <i>'+money(R.wage)+'</i></b></div>'+
+ (s.shelfBonus?'<p style="color:#ffcd2e;font-size:12px;text-align:center">목표 2배 달성! 다음 상점 진열 +1</p>':'')+
+ (s.nego?negoHtml(s.nego,si):'')+'</div><div class="btns"><button class="b y big" id="sGo">'+(R.phase==='clear'?'엔딩 보기 ▶':'상점으로 ▶')+'</button></div>';
  show(h);coinSnd();const go=()=>R.phase==='clear'?overScr():shopScr();
- if(s.nego){const F=['😄','🙂','😠','🤑'],M={1.5:['기분 좋음 ×1.5','오늘 기분 최고야, 올려줄게'],1:['보통 ×1','음… 이 정도면 되겠지'],0.5:['기분 나쁨 ×0.5','요즘 회사 어려운 거 알지?'],bonus:['보너스!','수고했어! 특별 보너스다']};
-  $('sGo').disabled=true;let n=0;const iv=setInterval(()=>{if($('rl'))$('rl').textContent=F[n++%4];snd(700+n*20,.03)},90);
-  setTimeout(()=>{clearInterval(iv);if(!$('rl'))return;const m=M[s.nego.mood];$('rl').textContent=s.nego.mood==='bonus'?'🤑':s.nego.mood===1.5?'😄':s.nego.mood===1?'🙂':'😠';
-   $('nr').innerHTML='<p style="color:#ffcd2e">'+m[0]+' · "'+m[1]+'"</p><p>일급 상한 '+money(s.nego.before)+' → <b style="color:#a7f070">'+money(s.nego.before+s.nego.inc)+'</b>'+(s.nego.bonus?'<br>보너스 +'+money(s.nego.bonus):'')+'</p>';bell();$('sGo').disabled=false},firstTime?1500:10)}
+ if(s.nego&&firstTime)bell();
  $('sGo').onclick=go}
+function negoHtml(n,si){const N=CFG.NEGO,ch=si.ch+1;if(!n.tier)return '<div id="nego" class="nego"><p>연봉협상 · 상한 '+money(n.before)+' → <b>'+money(n.before+n.inc)+'</b></p></div>';
+ let h='<div id="nego" class="nego"><div class="nh">연봉협상 '+n.tier+'단계 · 상한 +'+money(n.inc)+'</div><div class="nt">';
+ N.tiers.forEach((x,j)=>{const nx=N.tiers[j+1];h+='<div class="'+(j+1===n.tier?'on':'')+'"><span>'+(j+1)+'단계</span><span>×'+x[0]+(nx?'~'+nx[0]:'+')+'</span><b>+'+money(Math.round(N.base*x[1]*ch/10)*10)+'</b></div>'});
+ return h+'</div><p class="sub">목표 대비 ×'+n.over.toFixed(2)+' · 상한 '+money(n.before)+' → <b style="color:#a7f070">'+money(n.before+n.inc)+'</b></p></div>'}
 // ---------- shop ----------
 let armed=null;
 let shopTab=0;
