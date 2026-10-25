@@ -26,7 +26,7 @@ ENG.makeChart=function(isBoss){const P=ENG.pools(),n=isBoss?C().N_BOSS:C().N_NOR
  const k=20000/m,vx=C().VOL_X||1,q=x=>r2(20000+(x*k-20000)*vx);return {bars:c.map(b=>[q(b[0]),q(b[1]),q(b[2]),q(b[3]),b[4]|0]),src:[di,o,hf,vf]}};
 // ---------- run ----------
 ENG.newRun=()=>({ver:1,stage:0,wage:0,cap:C().WAGE_CAP0,levU:[1],betU:[10],lev:1,pct:10,eq:[],slots:C().SLOTS,comp:0,shelfBonus:false,shop:null,phase:'map',T:null,
- st:{trades:0,wins:0,longN:0,shortN:0,liq:0,bait:0,nana:0,bought:0,earned:0},hist:[],settle:null,result:null});
+ st:{trades:0,wins:0,longN:0,shortN:0,liq:0,bait:0,nana:0,bought:0,earned:0,mc:0,early:0,maxHeld:0,bestP:0,bestS:0},hist:[],settle:null,result:null});
 ENG.stageInfo=s=>{const ch=Math.floor(s/3),k=s%3;return {ch,k,boss:k===2,start:C().START_BAL[ch],target:C().TARGET[ch][k],name:(ch+1)+'-'+(k+1),bk:k===2?BOSSK[ch]:null}};
 ENG.has=(R,id)=>R.eq.some(b=>b.id===id)&&!(R.T&&R.T.disabled===id);
 const has=ENG.has;
@@ -70,7 +70,7 @@ ENG.close=function(R,price,why='close'){const T=R.T,ps=T&&T.pos;if(!ps)return nu
   M('long',C().LONG_X,ps.dir>0);M('short',C().SHORT_X,ps.dir<0);M('first',C().FIRST_X,ps.first);M('allin',C().ALLIN_X,true);
   M('combo',1+(C().COMBO_STEP+C().UPG.combo*ENG.lv(R,'combo'))*T.combo,T.combo>0);
   p=base*mult;if(has(R,'fee')&&ENG.lv(R,'fee')){p+=C().UPG.feeRebate*ENG.lv(R,'fee');tags.push('리베이트')}if(has(R,'compound')&&R.comp>0){bonus=base*R.comp/100;p+=bonus;tags.push('복리+'+R.comp.toFixed(1)+'%')}}
- const f=ENG.fee(R,ps.bet);T.bal=r2(Math.max(0,T.bal+p-f));T.fees+=f;T.pos=null;T.trades++;R.st.trades++;
+ const f=ENG.fee(R,ps.bet);T.bal=r2(Math.max(0,T.bal+p-f));T.fees+=f;T.pos=null;T.trades++;R.st.trades++;R.st.maxHeld=Math.max(R.st.maxHeld||0,held);
  if(p>0){T.wins++;R.st.wins++;if(why!=='nana'){T.combo++;if(has(R,'compound'))R.comp=Math.round((R.comp+(C().COMPOUND_STEP+C().UPG.compound*ENG.lv(R,'compound'))*100)*1000)/1000}}else T.combo=0;
  if(why==='liq'){T.liq++;R.st.liq++}
  if(T.bal>=T.start*(1+T.target/100))T.reached=true;
@@ -86,7 +86,7 @@ ENG.endStage=function(R,bust,px){const T=R.T;let last=null;if(T.pos)last=ENG.clo
  const ret=(T.bal-T.start)/T.start*100;const pass=!bust&&ret>=T.target-1e-9;
  T.res={ret:r2(ret),pass,profit:r2(T.bal-T.start),bust:!!bust,last,early:px!=null};R.hist.push({stage:R.stage,ret:r2(ret),pass});
  if(pass){R.phase='settle';ENG.settle(R)}else{R.phase='over';ENG.finishRun(R,false)}return T.res};
-ENG.settle=function(R){const T=R.T,si=ENG.stageInfo(R.stage),I=C().INTEREST,N=C().NEGO;const piggy=has(R,'piggy');
+ENG.settle=function(R){const T=R.T,si=ENG.stageInfo(R.stage),I=C().INTEREST,N=C().NEGO;const piggy=has(R,'piggy');R.st.bestP=Math.max(R.st.bestP||0,r2(T.bal-T.start));if(R.st.bestP===r2(T.bal-T.start))R.st.bestS=R.stage;
  const raw=Math.max(0,T.res.profit)*C().WAGE_PCT,pay=Math.round(Math.min(raw,R.cap));
  const s={raw:Math.round(raw),pay,capped:raw>R.cap,cap:R.cap,piggy:piggy?I.piggyStage+C().UPG.piggyStage*ENG.lv(R,'piggy'):0,nego:null,carry:R.wage,interest:0,shelfBonus:false};
  if(!si.boss&&T.res.ret>=T.target*C().SHELF_BONUS_X)s.shelfBonus=true;
@@ -96,7 +96,7 @@ ENG.settle=function(R){const T=R.T,si=ENG.stageInfo(R.stage),I=C().INTEREST,N=C(
  R.settle=s;return s};
 // early leave: only when equity at px already meets target
 ENG.canLeave=function(R,px){const T=R.T;if(!T||R.phase!=='trade')return false;const g=ENG.gimAt(T,T.i);if(g==='limit'||g==='fomc')return false;const eq=T.bal+(T.pos?ENG.upnl(T,px)-ENG.fee(R,T.pos.bet):0);return eq>=T.start*(1+C().SHELF_BONUS_X*T.target/100)-1e-9};
-ENG.earlyLeave=function(R,px){if(!ENG.canLeave(R,px))return null;return ENG.endStage(R,false,px)};
+ENG.earlyLeave=function(R,px){if(!ENG.canLeave(R,px))return null;R.st.early=(R.st.early||0)+1;return ENG.endStage(R,false,px)};
 // apply settlement (called once when leaving settlement screen): pay wage, raise cap, interest, open shop
 ENG.applySettle=function(R){const s=R.settle;if(!s||s.applied)return;const I=C().INTEREST;
  R.wage+=s.pay+s.piggy+(s.dbl||0);if(s.nego){R.cap+=s.nego.inc;R.wage+=s.nego.bonus}

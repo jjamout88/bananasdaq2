@@ -71,9 +71,9 @@ function tutorial(i,done){if(i>=TUT.length){META.tut=true;saveMeta();closeModal(
  $('tN').onclick=()=>tutorial(i+1,done);$('tS').onclick=()=>tutorial(99,done)}
 // ---------- trade ----------
 let paused=true,news={},mutTimer=0,lastHud={},nanaState=null,gimCls='';
-const CAN=CFG.CANDLE_MS;
+const CAN=CFG.CANDLE_MS,PN=Math.max(30,Math.round(30*CAN/2000)),PJ=CAN>2000?.27:.25;// path steps scale with bar time so per-second wiggle stays like 2s
 function enterTrade(resumed){T=R.T;S=T;hideOv();closeModal();state='play';G.on=true;G.day={c:T.bars};G.arrows=T.arrows;G.i=T.i;G.t=0;G.whale=0;
- const b=T.bars[T.i];G.cur=[b[0],b[0],b[0],b[0],b[4]];G.path=mkPath(b);G.price=b[0];news=planNews(T.bars);lastHud={};nanaState=null;dangerOff();
+ const b=T.bars[T.i];G.cur=[b[0],b[0],b[0],b[0],b[4]];G.path=mkPath(b,PN,PJ);G.price=b[0];news=planNews(T.bars);lastHud={};nanaState=null;dangerOff();
  const si=ENG.stageInfo(R.stage);$('day').textContent=si.boss?'☠ '+si.name+' '+ENG.BOSS_INFO[si.bk][0]:'STAGE '+si.name;
  renderBar();renderSel();applyGim();
  if(T.disabled&&!resumed){const dn=BMAP[T.disabled][1];setTimeout(()=>toast(dn+'바나나 먹통! 이번 판 꺼짐',true),600)}
@@ -90,7 +90,7 @@ function renderSel(){const many=a=>a.length>1?' <em>▸</em>':'';const levU=[...
  $('selLev').innerHTML='<small>레버</small>×'+R.lev+many(levU);const ai=ENG.has(R,'allin');$('selBet').innerHTML='<small>베팅</small>'+(ai?'100% 🔒':R.pct+'%'+many(betU));
  $('selLev').onclick=()=>{R.lev=levU[(levU.indexOf(R.lev)+1)%levU.length];renderSel();snd(900,.03);save()};
  $('selBet').onclick=()=>{if(ai){toast('한방바나나: 베팅 100% 고정');return}R.pct=betU[(betU.indexOf(R.pct)+1)%betU.length];renderSel();snd(1000,.03);save()}}
-const MAILS=[["[속보] CPI 예상치 상회", "물가가 또 올랐대.\n바나나도 올랐대.\n월급은 그대로래."], ["[속보] 근원 CPI 쇼크", "근원이 근원까지 뚫음\n숏충이들 축제 중\n롱충이들 묵념 중"], ["[속보] CPI 예상 하회", "물가 잡혔다는데\n내 지갑은 왜 비었지\n일단 롱 가즈아"], ["연준 의장 비서실", "의장님이 바나나를\n드시는 중이라\n발언이 지연됩니다"], ["[속보] 연준 위원 발언", "\"인플레는 일시적\"\n(작년에도 그랬음)\n(재작년에도)"], ["원숭이증권 알림", "증거금 부족 안내\n잔고를 확인해 주세요.\n(확인해도 안 늘어남)"], ["원숭이증권 마진콜", "고객님 계좌가\n숨을 안 쉽니다\n심폐소생 바랍니다"], ["원숭이증권 이벤트", "수수료 0원 이벤트!\n*단, 손실은 유료\n자세한 건 약관 참조"], ["동네마트 영수증", "바나나 12송이 $34.20\n바나나우유 $2.10\n포인트 적립 0점"], ["정글 카드 명세서", "이번 달 결제 예정\n$1,234.56\n대부분 바나나"], ["정글 카드 명세서 (2)", "새벽 3시 결제 17건\n가맹점: 치킨집\n기억 안 나시죠?"], ["정글 카드 한도 안내", "한도 초과입니다\n바나나 1개도\n결제 불가"], ["[광고] 100% 수익 비법", "클릭만 하면 부자!\n(아님)\n수신거부: 확인"], ["[광고] 리딩방 VIP 초대", "적중률 99.9%\n남은 0.1%가\n지금 당신 계좌"], ["[광고] 코인 무료 에어드랍", "지갑 주소와\n비밀번호를 보내주세요\n(보내지 마세요)"], ["[광고] 바나나 구독", "매일 아침 한 송이\n월 $9.99\n해지는 전화로만"], ["[광고] 손절 학원", "손절 못 하는 당신\n첫 수업 무료\n(첫 수업 = 손절)"], ["[스팸] 해외 왕자님", "당신에게 유산을\n남기고 싶습니다\n수수료만 보내세요"], ["[스팸] 당첨 축하", "바나나 1년치 당첨!\n수령하려면\n카드번호 입력"], ["[스팸] 외계인 연락", "지구 증시 관찰 중\n당신 매매 보고\n회의 중단함"], ["[스팸] 다이어트 비법", "계좌가 빠지는 속도로\n살이 빠진다면?\n지금 신청"], ["택배 알림", "고객님 택배가\n문 앞에 놓였습니다\n(옆집 문 앞)"], ["택배 알림 (2)", "주문하신 모니터 6대\n배송 출발\n이제 몰래 못 삼"], ["택배 미수령", "주소 불일치로 보류\n주소: 한강\n확인 부탁드립니다"], ["팀장님", "이번 달 실적 보고서\n오늘까지 부탁해요.\n급한 건 아니고 지금요."], ["팀장님 (2)", "자리에 안 계시네요\n화장실에서 차트\n보는 거 다 압니다"], ["부장님 호출", "잠깐 회의실로\n(5분이면 됩니다)\n(2시간 걸림)"], ["부장님 (2)", "나도 물렸네\n자네 손절 언제\n하나 같이 하세"], ["옆자리 김대리", "님 모니터 다 보임\n그 숏 저도\n탔습니다"], ["인사팀 공지", "근무 중 주식 앱\n사용 자제 바랍니다\n- 인사팀(물림)"], ["회사 전체 메일", "탕비실 바나나\n누가 다 먹었나요\nCCTV 확인 중"], ["사내 동호회", "차트 분석 동호회\n이번 주 모임 취소\n회장님 청산됨"], ["엄마", "밥은 먹고 다니니\n선물 이제 끊었지?"], ["엄마 (2)", "밥은 먹고 다니니\n김치 보냈다\n선물 이제 끊었지?"], ["엄마 (3)", "엄마가 차트 봤는데\n빨간 게 좋은 거지?\n전화 좀 받아"], ["엄마 (4)", "추운데 옷 따뜻하게\n입고 다녀\n계좌도 따뜻하니?"], ["엄마 (5)", "이모가 그러는데\n선물은 도박이래\n이제 안 하지?"], ["엄마 (6)", "옆집 아들은\n적금 들었다더라\n너는 뭐 들었니"], ["친구", "야 나 롱 탔다\n너도 타\n(10분 뒤) 내려"], ["친구 (2)", "형 돈 좀 빌려줘\n아 형 청산됐지\n미안 없던 일로"], ["단톡방 (99+)", "\"다들 탈출함?\"\n\"나만 물림?\"\n\"ㅋㅋ 존버\""], ["여자친구", "오늘 저녁 뭐 먹어?\n...차트 말고\n대답해"], ["집주인", "월세 입금일이\n오늘입니다\n바나나로는 안 받아요"], ["은행 대출 상담", "신용점수 확인 결과\n... 죄송합니다\n좋은 하루 되세요"], ["기상청 특보", "오늘 장중\n변동성 폭풍 예상\n우산 대신 손절"], ["미래의 나", "지금 그 포지션\n... 말 안 할게\n힘내"], ["원숭이 심리실험자 모집", "바나나 앞 참을성 측정\n사례비 {N}만원 지급\n- 제인 구달달 드림"], ["과거의 나", "10년 전에 바나나\n사두라고 했잖아\n안 들었지"]];
+const MAILS=[["[속보] CPI 예상치 상회", "물가가 또 올랐대.\n바나나도 올랐대.\n월급은 그대로래."], ["[속보] 근원 CPI 쇼크", "근원이 근원까지 뚫음\n숏충이들 축제 중\n롱충이들 묵념 중"], ["[속보] CPI 예상 하회", "물가 잡혔다는데\n내 지갑은 왜 비었지\n일단 롱 가즈아"], ["연준 의장 비서실", "의장님이 바나나를\n드시는 중이라\n발언이 지연됩니다"], ["[속보] 연준 위원 발언", "\"인플레는 일시적\"\n(작년에도 그랬음)\n(재작년에도)"], ["원숭이증권 알림", "증거금 부족 안내\n잔고를 확인해 주세요.\n(확인해도 안 늘어남)"], ["원숭이증권 마진콜", "고객님 계좌가\n숨을 안 쉽니다\n심폐소생 바랍니다"], ["원숭이증권 이벤트", "수수료 0원 이벤트!\n*단, 손실은 유료\n자세한 건 약관 참조"], ["동네마트 영수증", "바나나 12송이 $34.20\n바나나우유 $2.10\n포인트 적립 0점"], ["정글 카드 명세서", "이번 달 결제 예정\n$1,234.56\n대부분 바나나"], ["정글 카드 명세서 (2)", "새벽 3시 결제 17건\n가맹점: 치킨집\n기억 안 나시죠?"], ["정글 카드 한도 안내", "한도 초과입니다\n바나나 1개도\n결제 불가"], ["[광고] 100% 수익 비법", "클릭만 하면 부자!\n(아님)\n수신거부: 확인"], ["[광고] 리딩방 VIP 초대", "적중률 99.9%\n남은 0.1%가\n지금 당신 계좌"], ["[광고] 코인 무료 에어드랍", "지갑 주소와\n비밀번호를 보내주세요\n(보내지 마세요)"], ["[광고] 바나나 구독", "매일 아침 한 송이\n월 $9.99\n해지는 전화로만"], ["[광고] 손절 학원", "손절 못 하는 당신\n첫 수업 무료\n(첫 수업 = 손절)"], ["[스팸] 해외 왕자님", "당신에게 유산을\n남기고 싶습니다\n수수료만 보내세요"], ["[스팸] 당첨 축하", "바나나 1년치 당첨!\n수령하려면\n카드번호 입력"], ["[스팸] 외계인 연락", "지구 증시 관찰 중\n당신 매매 보고\n회의 중단함"], ["[스팸] 다이어트 비법", "계좌가 빠지는 속도로\n살이 빠진다면?\n지금 신청"], ["택배 알림", "고객님 택배가\n문 앞에 놓였습니다\n(옆집 문 앞)"], ["택배 알림 (2)", "주문하신 모니터 6대\n배송 출발\n이제 몰래 못 삼"], ["택배 미수령", "주소 불일치로 보류\n주소: 한강\n확인 부탁드립니다"], ["팀장님", "이번 달 실적 보고서\n오늘까지 부탁해요.\n급한 건 아니고 지금요."], ["팀장님 (2)", "자리에 안 계시네요\n화장실에서 차트\n보는 거 다 압니다"], ["부장님 호출", "잠깐 회의실로\n(5분이면 됩니다)\n(2시간 걸림)"], ["부장님 (2)", "나도 물렸네\n자네 손절 언제\n하나 같이 하세"], ["옆자리 김대리", "님 모니터 다 보임\n그 숏 저도\n탔습니다"], ["인사팀 공지", "근무 중 선물 앱\n사용 자제 바랍니다\n- 인사팀(물림)"], ["회사 전체 메일", "탕비실 바나나\n누가 다 먹었나요\nCCTV 확인 중"], ["사내 동호회", "차트 분석 동호회\n이번 주 모임 취소\n회장님 청산됨"], ["엄마", "밥은 먹고 다니니\n선물 이제 끊었지?"], ["엄마 (2)", "밥은 먹고 다니니\n김치 보냈다\n선물 이제 끊었지?"], ["엄마 (3)", "엄마가 차트 봤는데\n빨간 게 좋은 거지?\n전화 좀 받아"], ["엄마 (4)", "추운데 옷 따뜻하게\n입고 다녀\n계좌도 따뜻하니?"], ["엄마 (5)", "이모가 그러는데\n선물은 도박이래\n이제 안 하지?"], ["엄마 (6)", "옆집 아들은\n적금 들었다더라\n너는 뭐 들었니"], ["친구", "야 나 롱 탔다\n너도 타\n(10분 뒤) 내려"], ["친구 (2)", "형 돈 좀 빌려줘\n아 형 청산됐지\n미안 없던 일로"], ["단톡방 (99+)", "\"다들 탈출함?\"\n\"나만 물림?\"\n\"ㅋㅋ 존버\""], ["여자친구", "오늘 저녁 뭐 먹어?\n...차트 말고\n대답해"], ["집주인", "월세 입금일이\n오늘입니다\n바나나로는 안 받아요"], ["은행 대출 상담", "신용점수 확인 결과\n... 죄송합니다\n좋은 하루 되세요"], ["기상청 특보", "오늘 장중\n변동성 폭풍 예상\n우산 대신 손절"], ["미래의 나", "지금 그 포지션\n... 말 안 할게\n힘내"], ["원숭이 심리실험자 모집", "바나나 앞 참을성 측정\n사례비 {N}만원 지급\n- 제인 구달달 드림"], ["과거의 나", "10년 전에 바나나\n사두라고 했잖아\n안 들었지"]];
 let lastMails=[];
 function clearMails(){document.querySelectorAll('.mailw').forEach(e=>e.remove())}
 function mailStorm(){clearMails();const wr=$('wrap'),W=wr.clientWidth,H=wr.clientHeight;const fresh=MAILS.filter(m=>!lastMails.includes(m)).sort(()=>Math.random()-.5),pool=fresh.concat(MAILS.filter(m=>lastMails.includes(m))),n=5+(Math.random()<.5?1:0);
@@ -131,12 +131,12 @@ function pauseMenu(res){BGM.setHold(true);modal('<h2>'+(res?'이어하기':'일�
  $('pG').onclick=()=>{closeModal();BGM.setHold(false);startGo()};$('pS').onclick=()=>settings(()=>pauseMenu(res));$('pM').onclick=()=>{closeModal();BGM.setHold(false);save();G.on=false;menu()}}
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&G.on&&!paused){paused=true;save();pauseMenu(false)}});
 function step(dt){if(!G.on||paused)return;G.t+=dt*SPEED;mutTimer+=dt;if(mutTimer>=4200){mutTimer=-Math.random()*1500;if(!$('mut').classList.contains('show'))mutter()}
- const k=Math.min(30,G.t/CAN*30|0);G.price=G.path[k];G.cur[3]=G.price;G.cur[1]=Math.max(G.cur[1],G.price);G.cur[2]=Math.min(G.cur[2],G.price);
+ const k=Math.min(PN,G.t/CAN*PN|0);G.price=G.path[k];G.cur[3]=G.price;G.cur[1]=Math.max(G.cur[1],G.price);G.cur[2]=Math.min(G.cur[2],G.price);
  const lq=ENG.check(R,G.price);if(lq){onClose(lq);checkBust();if(!G.on)return}
  mcTick();
  if(G.t>=CAN){G.t=0;const b=T.bars[T.i];G.cur=b.slice();G.price=b[3];
   const ev=ENG.candle(R);if(ev.end){finishStage();return}
-  G.i=T.i;const nb=T.bars[T.i];G.cur=[nb[0],nb[0],nb[0],nb[0],nb[4]];G.path=mkPath(nb);G.price=nb[0];
+  G.i=T.i;const nb=T.bars[T.i];G.cur=[nb[0],nb[0],nb[0],nb[0],nb[4]];G.path=mkPath(nb,PN,PJ);G.price=nb[0];
   const sk=$('news')._sticky;if(news[T.i]&&!sk&&!ev.warn&&!ev.gim)setNews(news[T.i],true);
   if(ev.warn)clearMails();
   if(ev.warn){const wn=ENG.warnIn(T,T.i);if(!window.WCH)window.WCH=FX2.gfx();if(wn===CFG.GIMMICK.warn)WCH.warn(ev.warn);setNews('⚠ '+(wn>1?wn+'봉 뒤':'다음 봉')+': '+ENG.BOSS_INFO[ev.warn][0]+'!',true,true);snd(1200,.1);}
@@ -150,7 +150,7 @@ const MC_ON=.75,MC_OFF=.6,MC_IN_LIMIT=true;
 function mcOff(){$('game').classList.remove('mc');if(G.danger)dangerOff()}
 function mcTick(){if(!T||!T.pos){mcOff();return}{const g=ENG.gimAt(T,T.i);if(g&&(g!=='limit'||!MC_IN_LIMIT)){mcOff();return}}
  const r=-upnl()/T.pos.bet;$('game').classList.toggle('mc',r>=MC_ON);
- if(r>=MC_ON&&!G.danger){G.danger=1;T.mcN=(T.mcN||0)+1;sayM(pick(['마진콜 떴다!!','증거금 부족이래','샤갈!!','나락 간다','계좌 녹는 중…','레버리지에 쓰이는 중']));const m=$('mm');m.className='';void m.offsetWidth;m.className='slam '+(T.pos.dir>0?'up':'dn');$('shout').style.display='none';shake=25;snd(150,.4,'sawtooth',.09,200);clearTimeout(G.mt);G.mt=setTimeout(()=>{if(G.danger)m.className='ling '+(T.pos&&T.pos.dir>0?'up':'dn')},1400);if(mood!=='panic')setMood('panic',30)}
+ if(r>=MC_ON&&!G.danger){G.danger=1;T.mcN=(T.mcN||0)+1;R.st.mc=(R.st.mc||0)+1;sayM(pick(['마진콜 떴다!!','증거금 부족이래','샤갈!!','나락 간다','계좌 녹는 중…','레버리지에 쓰이는 중']));const m=$('mm');m.className='';void m.offsetWidth;m.className='slam '+(T.pos.dir>0?'up':'dn');$('shout').style.display='none';shake=25;snd(150,.4,'sawtooth',.09,200);clearTimeout(G.mt);G.mt=setTimeout(()=>{if(G.danger)m.className='ling '+(T.pos&&T.pos.dir>0?'up':'dn')},1400);if(mood!=='panic')setMood('panic',30)}
  else if(r<MC_OFF&&G.danger){T.mcs=(T.mcs||0)+1;dangerOff();$('game').classList.remove('mc')}}
 function gimClear(){if(gimCls)$('game').classList.remove(gimCls);gimCls=''}
 function hud(){const p=upnl(),cpi=!!(T&&ENG.gimAt(T,T.i)==='limit');const set=(id,v,prop='textContent')=>{if(lastHud[id]!==v){lastHud[id]=v;$(id)[prop]=v}};
@@ -173,7 +173,7 @@ function settleScr(){const s=R.settle,res=R.T.res;const firstTime=!s.applied;ENG
  '<div class="mwal"><span>지갑</span><b>'+money(R.wage-tot)+' → <i>'+money(R.wage)+'</i></b></div>'+
  (s.shelfBonus?'<p style="color:#ffcd2e;font-size:12px;text-align:center">목표 2배 달성! 다음 상점 진열 +1</p>':'')+
  (s.nego?negoHtml(s.nego,si):'')+'</div><div class="btns"><button class="b y big" id="sGo">'+(R.phase==='clear'?'엔딩 보기 ▶':'상점으로 ▶')+'</button></div>';
- show(h);coinSnd();const go=()=>R.phase==='clear'?overScr():shopScr();
+ show(h);coinSnd();const go=()=>R.phase==='clear'?endingScr():shopScr();
  if(s.nego&&firstTime)bell();
  $('sGo').onclick=go}
 function negoHtml(n,si){const N=CFG.NEGO,ch=si.ch+1;if(!n.tier)return '<div id="nego" class="nego"><p>연봉협상 · 상한 '+money(n.before)+' → <b>'+money(n.before+n.inc)+'</b></p></div>';

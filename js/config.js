@@ -1,9 +1,9 @@
 // 바나나스닥2 — all tunable numbers live here.
 window.CFG={
- CANDLE_MS:2000, VOL_X:1.05, N_NORMAL:30, N_BOSS:45, MINBET:50,
+ CANDLE_MS:2500, /* 봉 하나 시간(ms), 원래 2000. 봉 안 틱 수도 비례(약 15틱/초) */ VOL_X:1.05, N_NORMAL:30, N_BOSS:45, MINBET:50,
  FEE_FLAT:2, FEE_PCT:0.0005, PV_DIV:3,
  START_BAL:[10000,20000,40000,70000,100000],
- TARGET:[[10,15,20],[30,50,80],[100,120,150],[150,180,220],[200,300,400]],
+ TARGET:[[10,15,20],[30,50,80],[180,220,280],[300,400,500],[500,650,800]],
  VOL_MIN_RATIO:0.7, BOSS_TOP:0.10,
  WAGE_PCT:0.30, WAGE_CAP0:1500,
  NEGO:{base:500,tiers:[[1,1.1],[1.25,1.35],[1.5,1.6],[1.75,1.9],[2,2.3]]}, // 연봉협상: 상한 += base × 배수 × 챕터 (수익률/목표 구간별)

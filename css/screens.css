@@ -66,7 +66,7 @@
 #blue{position:absolute;inset:0;display:none;z-index:4;background:#1d3fbf;color:#fff;align-items:center;justify-content:center;flex-direction:column;font-size:26px;text-shadow:3px 3px 0 #000}
 #blue small{font-size:13px;margin-top:6px}
 .g-witch #cloud{display:none}.g-limit #blue{display:none}
-.g-earn #chartBox{transform:rotate(180deg)}
+.g-earn #chartBox{transform:scaleY(-1)}
 .g-fomc #acts button{filter:grayscale(1) brightness(.6)}
 #lockT{position:absolute;left:10px;right:10px;top:752px;text-align:center;font-size:16px;color:#ffcd2e;z-index:8;display:none;text-shadow:2px 2px 0 #000;pointer-events:none}
 .g-fomc #lockT{display:block}
@@ -143,3 +143,27 @@
 .mbd{text-align:center;font-size:12px;color:#94b0c2;margin-bottom:10px}
 .mwal{display:flex;justify-content:space-between;padding:8px;border-top:2px dashed #333c57;border-bottom:2px dashed #333c57;font-size:14px}.mwal i{font-style:normal;color:#ffcd2e}
 .nego{opacity:.85;transform:scale(.92)}.nego .nh{font-size:13px}.nego .nt div{font-size:11px;padding:1px 8px}
+/* ending */
+.end{position:absolute;inset:0;background:#1a1c2c;overflow:hidden;display:flex;flex-direction:column;align-items:center}
+#endFw{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;pointer-events:none}
+.e1{margin-top:150px;text-align:center;z-index:1}.etl{font-size:40px;font-weight:bold;color:#ffcd2e;text-shadow:3px 3px 0 #b13e53,6px 6px 0 #000}
+.ebal{font-size:34px;font-weight:bold;color:#a7f070;margin-top:12px;text-shadow:3px 3px 0 #000}#endMk{width:120px;height:132px;image-rendering:pixelated;margin-top:30px}
+.ewin{position:absolute;left:40px;right:40px;top:300px;background:#c2c3c7;border:3px solid #000;box-shadow:4px 4px 0 #000,inset -2px -2px 0 #566c86,inset 2px 2px 0 #fff;z-index:5;animation:mpop .3s steps(5)}
+.ewin .mt{background:#29366f;color:#fff;display:flex;justify-content:space-between;padding:3px 6px;font-size:12px}.ewin .mt i{font-style:normal;background:#c2c3c7;color:#000;padding:0 4px}
+.ewin .eb{display:flex;gap:10px;align-items:center;padding:14px 10px;color:#000;font-size:15px;line-height:21px}.ewin .eb b{flex:none;width:30px;height:30px;border-radius:50%;background:#ffcd2e;border:2px solid #000;display:flex;align-items:center;justify-content:center;font-size:20px}
+.eslam{position:absolute;left:0;right:0;top:160px;z-index:8;display:flex;flex-direction:column;align-items:center;animation:mslam 1.4s forwards;animation-name:eslamA}
+.eslam img{width:300px;image-rendering:pixelated}.eslam b{position:absolute;top:230px;left:0;right:0;text-align:center;font-family:monospace;font-size:56px;color:#fff;-webkit-text-stroke:3px #000;text-shadow:6px 6px 0 #b13e53;letter-spacing:-2px;animation:spop .9s forwards}
+@keyframes eslamA{0%{transform:scale(2.4);opacity:0}12%{transform:scale(.92);opacity:1}20%{transform:scale(1.06) rotate(-2deg)}30%{transform:scale(1)}100%{opacity:1}}
+.eshake{animation:eshk .08s steps(2) 12}@keyframes eshk{0%{transform:translate(-6px,4px)}50%{transform:translate(6px,-4px)}}
+.ecred{position:absolute;inset:0;background:#000;overflow:hidden}.ecr{position:absolute;left:0;right:0;top:100%;animation:ecrA 15s linear forwards;padding:0 30px}
+@keyframes ecrA{to{transform:translateY(-190%)}}
+.ecr p{display:flex;justify-content:space-between;gap:10px;font-size:14px;color:#c2c3c7;margin:18px 0}.ecr p b{color:#ffcd2e;text-align:right}
+.ecr .eh{justify-content:center;font-size:28px;color:#ffcd2e;font-weight:bold}.ecr .es{justify-content:center;color:#566c86}
+.eskip{position:absolute;bottom:14px;left:0;right:0;text-align:center;font-size:11px;color:#566c86}
+.efin{position:absolute;inset:0;background:#1a1c2c;display:flex;align-items:center;justify-content:center}.ewm{position:relative;width:280px;animation:mpop .35s steps(6)}
+.ebt{display:flex;gap:8px;padding:6px 8px 10px}.ebt .b{flex:1;font-size:15px;padding:10px 0}
+.e1{margin-top:120px}.etl{position:relative;display:inline-block;animation:etlB 1s steps(8) infinite}
+.etl span{background:linear-gradient(100deg,#ffcd2e 40%,#fff7c2 50%,#ffcd2e 60%) 0 0/300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:etlS 1.6s linear infinite;text-shadow:none;filter:drop-shadow(3px 3px 0 #b13e53) drop-shadow(3px 3px 0 #000)}
+@keyframes etlS{from{background-position:100% 0}to{background-position:-100% 0}}@keyframes etlB{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.ebal.pop{animation:pop .3s steps(3)}
+.end.frz .etl,.end.frz .etl span{animation-play-state:paused}
